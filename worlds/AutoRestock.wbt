@@ -1,16 +1,43 @@
 #VRML_SIM R2025a utf8
+
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
+EXTERNPROTO "../protos/Wall.proto"
+
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.5773 0.5773 0.5773 2.0944
-  position 0 0 10
+  orientation 0.10256453264023446 0.859267232924809 -0.5011390416501514 0.4676524194366811
+  position -40.74750248891332 8.618009980072447 18.551774613337123
 }
 TexturedBackground {
+  texture "factory"
 }
 TexturedBackgroundLight {
+  texture "factory"
 }
-RectangleArena {
+Floor {
+  size 30 30
+}
+Wall {
+  translation 0 -15 1.5
+  name "South Wall"
+  appearance PBRAppearance {
+    metalness 0
+  }
+}
+Wall {
+  translation 15 0 1.5
+  rotation 0 0 1 1.5708
+  name "East Wall"
+}
+Wall {
+  translation -15 0 1.5
+  rotation 0 0 1 1.5708
+  name "West Wall"
+}
+Wall {
+  translation 0 15 1.5
+  name "North Wall"
 }
