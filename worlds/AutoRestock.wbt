@@ -8,8 +8,8 @@ EXTERNPROTO "../protos/Wall.proto"
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.2703507171204512 0.6185577373509349 0.7377647425268775 1.0696539972859294
-  position -38.37206172465225 -40.77778849536051 50.22837548153754
+  orientation -0.2508357011356037 0.7045136623077983 0.6638839888545767 0.9845282190052311
+  position -92.02914569175421 -80.525273427278 107.87840987079223
 }
 TexturedBackground {
 }
@@ -18,21 +18,26 @@ TexturedBackgroundLight {
 Floor {
   size 30 30
 }
-Wall {
-  translation 15 0 2.5
-  rotation 0 0 1 1.5708
-  name "East Wall"
-}
-Wall {
-  translation -15 0 2.5
-  rotation 0 0 1 1.5708
-  name "West Wall"
-}
-Wall {
-  translation 0 -15 2.5
-  name "South Wall"
-}
-Wall {
-  translation 0 15 2.5
-  name "North Wall"
+Solid {
+  name "Walls"
+  children [
+    Wall {
+      translation 15 0 2.5
+      rotation 0 0 1 1.5708
+      name "East Wall"
+    }
+    Wall {
+      translation -15 0 2.5
+      rotation 0 0 1 1.5708
+      name "West Wall"
+    }
+    Wall {
+      translation 0 -15 2.5
+      name "South Wall"
+    }
+    Wall {
+      translation 0 15 2.5
+      name "North Wall"
+    }
+  ]
 }
