@@ -4,12 +4,13 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
 EXTERNPROTO "../protos/Wall.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.22400204510132427 -0.6849313343513914 -0.6933196600515859 5.401670650761272
-  position -57.12922031786583 -52.22258513034566 54.42297151129418
+  orientation 0.2969222368304049 -0.08126765975342315 -0.9514372037889999 3.651093966490904
+  position 9.449777562992901 -5.6515713879581515 7.387718323032779
 }
 TexturedBackground {
 }
@@ -18,6 +19,8 @@ TexturedBackgroundLight {
 Floor {
   translation 0 -7.5 0
   size 30 45
+}
+Pr2 {
 }
 Solid {
   children [
