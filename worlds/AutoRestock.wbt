@@ -8,36 +8,49 @@ EXTERNPROTO "../protos/Wall.proto"
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.2508357011356037 0.7045136623077983 0.6638839888545767 0.9845282190052311
-  position -92.02914569175421 -80.525273427278 107.87840987079223
+  orientation 0.22400204510132427 -0.6849313343513914 -0.6933196600515859 5.401670650761272
+  position -57.12922031786583 -52.22258513034566 54.42297151129418
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
 Floor {
-  size 30 30
+  translation 0 -7.5 0
+  size 30 45
 }
 Solid {
-  name "Walls"
   children [
     Wall {
-      translation 15 0 2.5
+      translation 15 -7.5 2.5
       rotation 0 0 1 1.5708
       name "East Wall"
+      size 45 0.2 5
     }
     Wall {
-      translation -15 0 2.5
+      translation -15 -7.5 2.5
       rotation 0 0 1 1.5708
       name "West Wall"
-    }
-    Wall {
-      translation 0 -15 2.5
-      name "South Wall"
+      size 45 0.2 5
     }
     Wall {
       translation 0 15 2.5
       name "North Wall"
     }
+    Wall {
+      translation 0 -30 2.5
+      name "South Wall"
+    }
+    Wall {
+      translation -8 -15 2.5
+      name "Storage Divider Right"
+      size 14 0.2 5
+    }
+    Wall {
+      translation 8 -15 2.5
+      name "Storage Divider Left"
+      size 14 0.2 5
+    }
   ]
+  name "Walls"
 }
