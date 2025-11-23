@@ -6,7 +6,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 PROTO Wall [
   field SFVec3f translation 0 0 1
   field SFRotation rotation 0 0 1 0
-  field SFString name "box"
+  field SFString name "wall"
   field SFVec3f size 30 0.2 5 # Defines the size of the box. # Defines the number of polygons used to represent the box and so its resolution.
   field SFString contactMaterial "default" # Is `Solid.contactMaterial`.
   field SFNode appearance PBRAppearance { 

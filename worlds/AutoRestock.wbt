@@ -9,8 +9,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.2969222368304049 -0.08126765975342315 -0.9514372037889999 3.651093966490904
-  position 9.449777562992901 -5.6515713879581515 7.387718323032779
+  orientation -0.12643062340058267 0.04058635088815369 0.9911448156491178 2.525501087919399
+  position 6.500609799000613 -4.468593938822449 4.042534901751376
 }
 TexturedBackground {
 }
@@ -21,6 +21,7 @@ Floor {
   size 30 45
 }
 Pr2 {
+  translation 0 -2.2 0
 }
 Solid {
   children [
