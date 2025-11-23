@@ -1,16 +1,60 @@
 #VRML_SIM R2025a utf8
+
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
+EXTERNPROTO "../protos/Wall.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
+
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.5773 0.5773 0.5773 2.0944
-  position 0 0 10
+  orientation -0.12643062340058267 0.04058635088815369 0.9911448156491178 2.525501087919399
+  position 6.500609799000613 -4.468593938822449 4.042534901751376
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
-RectangleArena {
+Floor {
+  translation 0 -7.5 0
+  size 30 45
+}
+Pr2 {
+  translation 0 -2.2 0
+}
+Solid {
+  children [
+    Wall {
+      translation 15 -7.5 2.5
+      rotation 0 0 1 1.5708
+      name "East Wall"
+      size 45 0.2 5
+    }
+    Wall {
+      translation -15 -7.5 2.5
+      rotation 0 0 1 1.5708
+      name "West Wall"
+      size 45 0.2 5
+    }
+    Wall {
+      translation 0 15 2.5
+      name "North Wall"
+    }
+    Wall {
+      translation 0 -30 2.5
+      name "South Wall"
+    }
+    Wall {
+      translation -8 -15 2.5
+      name "Storage Divider Right"
+      size 14 0.2 5
+    }
+    Wall {
+      translation 8 -15 2.5
+      name "Storage Divider Left"
+      size 14 0.2 5
+    }
+  ]
+  name "Walls"
 }
