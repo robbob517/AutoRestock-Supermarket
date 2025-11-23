@@ -9,8 +9,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.12643062340058267 0.04058635088815369 0.9911448156491178 2.525501087919399
-  position 6.500609799000613 -4.468593938822449 4.042534901751376
+  orientation -0.33463643650334074 -0.060677586029412076 0.9403917725703415 3.4793749431808605
+  position 23.24601942861532 9.265928357702977 19.35477704154809
 }
 TexturedBackground {
 }
@@ -19,6 +19,11 @@ TexturedBackgroundLight {
 Floor {
   translation 0 -7.5 0
   size 30 45
+}
+Robot {
+  name "Shelf Manager"
+  controller "shelf_manager"
+  supervisor TRUE
 }
 Pr2 {
   translation 0 -2.2 0
