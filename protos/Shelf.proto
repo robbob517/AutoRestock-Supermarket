@@ -7,7 +7,7 @@ PROTO Shelf [
   field SFVec3f translation 0 0 1
   field SFRotation rotation 1 0 0 1.5708
   field SFString name "shelf"
-  field SFFloat height 2
+  field SFFloat height 2.5
   field SFFloat width 2
   field SFFloat depth 0.5
   field SFFloat shelfCount 4
@@ -18,12 +18,13 @@ PROTO Shelf [
       let h = fields.height.value;
       let w = fields.width.value;
       let d = fields.depth.value;
-      let sc = fields.shelfCount.value;
+      let sc = fields.shelfCount.value + 1;
       let t = fields.thickness.value;
 
-      let shelfSpacing = ( h - (sc * t) / (sc - 1) )
-      if (sc < 2)
+      let shelfSpacing = (h - (sc * t)) / (sc - 1)
+      if (sc < 2) {
         shelfSpacing = 0
+      }
       >%
 
   Solid {
@@ -68,7 +69,18 @@ PROTO Shelf [
       }
 
       # Shelves
-      
+      %< for (let i = 0; i < sc - 1; i++ ) { >%
+        Transform {
+          translation 0 %<= (t/2) + (i * (shelfSpacing + t))>% 0
+          rotation -1 0 0 -1.5708
+          children [
+            Shape {
+              appearance PBRAppearance {}
+              geometry Box {size %<= w - (2*t) >% %<=d>% %<=t>%}
+            }
+          ]
+        }
+      %< } >%
     ]
   }
 }
