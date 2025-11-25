@@ -20,9 +20,8 @@ START_Y = -10
 
 supervisor = Supervisor()
 
-root_node = supervisor.getRoot()
-children = root_node.getField("children")
-shelves = root_node.
+shelf_group = supervisor.getFromDef("SHELVES")
+children = shelf_group.getField("children")
 
 east_facing = True
 for row in range(ROWS):
