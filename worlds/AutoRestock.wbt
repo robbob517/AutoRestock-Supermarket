@@ -5,12 +5,13 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
 EXTERNPROTO "../protos/Wall.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
+IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.33463643650334074 -0.060677586029412076 0.9403917725703415 3.4793749431808605
-  position 23.24601942861532 9.265928357702977 19.35477704154809
+  orientation -0.3249599590326138 -0.07245413170906247 0.9429482614776951 3.5560421433824057
+  position 22.761671008593254 10.770999792702536 18.96089626279141
 }
 TexturedBackground {
 }
