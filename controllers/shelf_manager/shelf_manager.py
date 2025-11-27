@@ -11,12 +11,12 @@ SHELF_DEPTH = 0.5
 SHELF_SPACING = 0.01
 
 # Aisle Dimensions
-ROWS = 14
-COLUMNS = 10
+ROWS = 10
+COLUMNS = 8
 AISLE_WIDTH = 2.5
 
-START_X = -11
-START_Y = -10
+START_X = -7.25
+START_Y = -3
 
 supervisor = Supervisor()
 

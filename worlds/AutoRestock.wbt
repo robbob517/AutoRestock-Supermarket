@@ -10,8 +10,8 @@ IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.3249599590326138 -0.07245413170906247 0.9429482614776951 3.5560421433824057
-  position 22.761671008593254 10.770999792702536 18.96089626279141
+  orientation 0.4866057100421636 0.49205641551105966 -0.7218693558454807 1.880495379049612
+  position 0.318687218288127 17.547871740669187 42.88476905250635
 }
 TexturedBackground {
 }
@@ -23,52 +23,51 @@ Robot {
   supervisor TRUE
 }
 Pr2 {
-  translation 0 -2.2 0
+  translation 0 -12 0
 }
 DEF SUPERMARKET_ENV Solid {
-    children [
-       DEF FLOOR Floor {
-         translation 0 -7.5 0
-         size 30 45
-       }
-       DEF WALLS Solid {
-          children [
-            Wall {
-              translation 15 -7.5 2.5
-              rotation 0 0 1 1.5708
-              name "East Wall"
-              size 45 0.2 5
-            }
-            Wall {
-              translation -15 -7.5 2.5
-              rotation 0 0 1 1.5708
-              name "West Wall"
-              size 45 0.2 5
-            }
-            Wall {
-              translation 0 15 2.5
-              name "North Wall"
-            }
-            Wall {
-              translation 0 -30 2.5
-              name "South Wall"
-            }
-            Wall {
-              translation -8 -15 2.5
-              name "Storage Divider Right"
-              size 14 0.2 5
-            }
-            Wall {
-              translation 8 -15 2.5
-              name "Storage Divider Left"
-              size 14 0.2 5
-            }
-          ]
-          name "Walls"
-       }
-       DEF SHELVES Solid {
-        children []
-        name "Shelves"
-       }
-   ]
+  children [
+    DEF FLOOR Floor {
+      size 20 30
+      tileSize 1 1
+    }
+    DEF WALLS Solid {
+      children [
+        Wall {
+          translation 10 0 2.5
+          rotation 0 0 1 1.5708
+          name "East Wall"
+        }
+        Wall {
+          translation -10 0 2.5
+          rotation 0 0 1 1.5708
+          name "West Wall"
+        }
+        Wall {
+          translation 0 14.9 2.5
+          name "North Wall"
+          size 19.8 0.2 5
+        }
+        Wall {
+          translation 0 -14.9 2.5
+          name "South Wall"
+          size 19.8 0.2 5
+        }
+        Wall {
+          translation -5.65 -8 2.5
+          name "Storage Divider Right"
+          size 8.5 0.2 5
+        }
+        Wall {
+          translation 5.65 -8 2.5
+          name "Storage Divider Left"
+          size 8.5 0.2 5
+        }
+      ]
+      name "Walls"
+    }
+    DEF SHELVES Solid {
+      name "Shelves"
+    }
+  ]
 }
