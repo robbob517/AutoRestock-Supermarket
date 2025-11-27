@@ -82,5 +82,39 @@ PROTO Shelf [
         }
       %< } >%
     ]
+
+    boundingObject Group {
+      children [
+        # Back Panel
+        Transform {
+          translation 0 %<= h/2 >% %<= -d/2 + t/2 >%
+          children [ Box {size %<=w>% %<=h>% %<=t>%} ]
+        }
+
+        # Left Side Panel
+        Transform {
+          translation %<= -w/2 + t/2 >% %<= h/2 >% 0
+          rotation 0 1 0 1.5708
+          children [ Box {size %<=d>% %<=h>% %<=t>%} ]
+        }
+
+        # Right Side Panel
+        Transform {
+          translation %<= w/2 - t/2 >% %<= h/2 >% 0
+          rotation 0 1 0 1.5708
+          children [ Box {size %<=d>% %<=h>% %<=t>%} ]
+        }
+
+        # Shelves
+        %< for (let i = 0; i < sc - 1; i++ ) { >%
+          Transform {
+            translation 0 %<= (t/2) + (i * (shelfSpacing + t))>% 0
+            rotation -1 0 0 -1.5708
+            children [ Box {size %<= w - (2*t) >% %<=d>% %<=t>%} ]
+          }
+        %< } >%
+      ]
+    }
+    physics NULL
   }
 }
