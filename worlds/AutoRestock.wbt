@@ -5,56 +5,70 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
 EXTERNPROTO "../protos/Wall.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
+IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.12643062340058267 0.04058635088815369 0.9911448156491178 2.525501087919399
-  position 6.500609799000613 -4.468593938822449 4.042534901751376
+  orientation -0.3249599590326138 -0.07245413170906247 0.9429482614776951 3.5560421433824057
+  position 22.761671008593254 10.770999792702536 18.96089626279141
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
-Floor {
-  translation 0 -7.5 0
-  size 30 45
+Robot {
+  name "Shelf Manager"
+  controller "shelf_manager"
+  supervisor TRUE
 }
 Pr2 {
   translation 0 -2.2 0
 }
-Solid {
-  children [
-    Wall {
-      translation 15 -7.5 2.5
-      rotation 0 0 1 1.5708
-      name "East Wall"
-      size 45 0.2 5
-    }
-    Wall {
-      translation -15 -7.5 2.5
-      rotation 0 0 1 1.5708
-      name "West Wall"
-      size 45 0.2 5
-    }
-    Wall {
-      translation 0 15 2.5
-      name "North Wall"
-    }
-    Wall {
-      translation 0 -30 2.5
-      name "South Wall"
-    }
-    Wall {
-      translation -8 -15 2.5
-      name "Storage Divider Right"
-      size 14 0.2 5
-    }
-    Wall {
-      translation 8 -15 2.5
-      name "Storage Divider Left"
-      size 14 0.2 5
-    }
-  ]
-  name "Walls"
+DEF SUPERMARKET_ENV Solid {
+    children [
+       DEF FLOOR Floor {
+         translation 0 -7.5 0
+         size 30 45
+       }
+       DEF WALLS Solid {
+          children [
+            Wall {
+              translation 15 -7.5 2.5
+              rotation 0 0 1 1.5708
+              name "East Wall"
+              size 45 0.2 5
+            }
+            Wall {
+              translation -15 -7.5 2.5
+              rotation 0 0 1 1.5708
+              name "West Wall"
+              size 45 0.2 5
+            }
+            Wall {
+              translation 0 15 2.5
+              name "North Wall"
+            }
+            Wall {
+              translation 0 -30 2.5
+              name "South Wall"
+            }
+            Wall {
+              translation -8 -15 2.5
+              name "Storage Divider Right"
+              size 14 0.2 5
+            }
+            Wall {
+              translation 8 -15 2.5
+              name "Storage Divider Left"
+              size 14 0.2 5
+            }
+          ]
+          name "Walls"
+       }
+       DEF SHELVES Solid {
+        children []
+        name "Shelves"
+       }
+   ]
 }
