@@ -21,7 +21,10 @@ START_Y = -3
 supervisor = Supervisor()
 
 shelf_group = supervisor.getFromDef("SHELVES")
-children = shelf_group.getField("children")
+shelf_children = shelf_group.getField("children")
+
+product_group = supervisor.getFromDef("PRODUCTS")
+product_children = product_group.getField("children")
 
 east_facing = True
 for row in range(ROWS):
@@ -43,7 +46,7 @@ for row in range(ROWS):
                     f'name "shelf_{row}_{col}"'
                     f' }} ')
 
-        children.importMFNodeFromString(-1, shelf)
+        shelf_children.importMFNodeFromString(-1, shelf)
     east_facing = False
 
 print("Shelves placed")
