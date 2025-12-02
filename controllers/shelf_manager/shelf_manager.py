@@ -3,6 +3,7 @@
 # You may need to import some classes of the controller module. Ex:
 #  from controller import Robot, Motor, DistanceSensor
 from controller import Supervisor
+import random
 
 
 # Shelf Dimensions
@@ -18,14 +19,33 @@ AISLE_WIDTH = 2.5
 START_X = -7.25
 START_Y = -3
 
-PRODUCT_NAMES = [
-    "BiscuitBox",
-    "CerealBox",
-    "HoneyJar",
-    "Can"
-]
+PRODUCTS = [
+    {
+        "name": "BiscuitBox",
+        "w": 0.24,
+        "h": 0.04,
+        "d": 0.08
+    },
 
-PRODUCTS = []
+    {
+        "name": "CerealBox",
+        "w": 0.08,
+        "h": 0.3,
+        "d": 0.2
+    },
+
+    {
+        "name": "HoneyJar",
+        "h": 0.115,
+        "r": 0.045
+    },
+
+    {
+        "name": "Can",
+        "h": 0.1222,
+        "r": 0.03175
+    }
+            ]
 
 supervisor = Supervisor()
 
@@ -34,14 +54,6 @@ shelf_children = shelf_group.getField("children")
 
 product_group = supervisor.getFromDef("PRODUCTS")
 product_children = product_group.getField("children")
-
-def get_product_dimensions(name):
-
-    return
-
-def product_placement():
-
-    return
 
 def shelf_placement():
 
@@ -70,9 +82,17 @@ def shelf_placement():
 
             shelf_children.importMFNodeFromString(-1, shelf)
 
+            product_placement(current_x, current_y, row, col, east_facing)
+
         east_facing = False
 
     print("Shelves placed")
+
+def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
+
+
+
+    return
 
 # Main
 shelf_placement()
