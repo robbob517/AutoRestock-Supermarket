@@ -18,6 +18,15 @@ AISLE_WIDTH = 2.5
 START_X = -7.25
 START_Y = -3
 
+PRODUCT_NAMES = [
+    "BiscuitBox",
+    "CerealBox",
+    "HoneyJar",
+    "Can"
+]
+
+PRODUCTS = []
+
 supervisor = Supervisor()
 
 shelf_group = supervisor.getFromDef("SHELVES")
@@ -26,27 +35,44 @@ shelf_children = shelf_group.getField("children")
 product_group = supervisor.getFromDef("PRODUCTS")
 product_children = product_group.getField("children")
 
-east_facing = True
-for row in range(ROWS):
-    if row % 2 == 0:
-        east_facing = True
-    for col in range(COLUMNS):
-        current_x = START_X + (row * SHELF_DEPTH) + ((row//2) * AISLE_WIDTH)
-        current_y = START_Y + (col * (SHELF_WIDTH + SHELF_SPACING))
+def get_product_dimensions(name):
 
-        if east_facing:
-            shelf = (f'Shelf {{ '
-                    f'translation {current_x} {current_y} 0 '
-                    f'rotation -0.5773451 0.577351 0.577351 -2.0944 '
-                    f'name "shelf_{row}_{col}"'
-                    f' }} ')
-        else:
-            shelf = (f'Shelf {{ '
-                    f'translation {current_x} {current_y} 0 '
-                    f'name "shelf_{row}_{col}"'
-                    f' }} ')
+    return
 
-        shelf_children.importMFNodeFromString(-1, shelf)
-    east_facing = False
+def product_placement():
 
-print("Shelves placed")
+    return
+
+def shelf_placement():
+
+    east_facing = True
+
+    for row in range(ROWS):
+
+        if row % 2 == 0:
+            east_facing = True
+
+        for col in range(COLUMNS):
+            current_x = START_X + (row * SHELF_DEPTH) + ((row//2) * AISLE_WIDTH)
+            current_y = START_Y + (col * (SHELF_WIDTH + SHELF_SPACING))
+
+            if east_facing:
+                shelf = (f'Shelf {{ '
+                        f'translation {current_x} {current_y} 0 '
+                        f'rotation -0.5773451 0.577351 0.577351 -2.0944 '
+                        f'name "shelf_{row}_{col}"'
+                        f' }} ')
+            else:
+                shelf = (f'Shelf {{ '
+                        f'translation {current_x} {current_y} 0 '
+                        f'name "shelf_{row}_{col}"'
+                        f' }} ')
+
+            shelf_children.importMFNodeFromString(-1, shelf)
+
+        east_facing = False
+
+    print("Shelves placed")
+
+# Main
+shelf_placement()
