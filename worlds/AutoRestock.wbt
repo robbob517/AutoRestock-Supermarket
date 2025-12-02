@@ -69,5 +69,8 @@ DEF SUPERMARKET_ENV Solid {
     DEF SHELVES Solid {
       name "Shelves"
     }
+    DEF PRODUCTS Solid {
+      name "Products"
+    }
   ]
 }
