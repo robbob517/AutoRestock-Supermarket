@@ -34,12 +34,13 @@ for row in range(ROWS):
         if east_facing:
             shelf = (f'Shelf {{ '
                     f'translation {current_x} {current_y} 0 '
-                    f'rotation -0.5773451 0.577351 0.577351 -2.0944 '
+                    f'rotation -0.57735 0.57735 0.57735 -2.0944 '
                     f'name "shelf_{row}_{col}"'
                     f' }} ')
         else:
             shelf = (f'Shelf {{ '
                     f'translation {current_x} {current_y} 0 '
+                    f'rotation 0.57735 0.57735 0.57735 2.0944 '
                     f'name "shelf_{row}_{col}"'
                     f' }} ')
 
