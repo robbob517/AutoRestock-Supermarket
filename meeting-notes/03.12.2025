@@ -1,0 +1,12 @@
+Pathfinding
+- Fix particle fitering - incorrect pose estimation
+
+Q - Learning
+- Too simple, needs to be more specific
+
+Env
+- Fix product placement
+- Optimise for better performance with particle filtering
+
+MARL
+- Start work on multi-agent algorithms
