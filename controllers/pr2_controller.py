@@ -326,7 +326,7 @@ def set_initial_position():
     set_torso_height(0.2, True)
 
 
-class PR2_QLearning_Agent:
+class PR2_Complex_RL_Agent:
     def __init__(self):
         self.ALPHA = 0.1
         self.GAMMA = 0.9
@@ -334,103 +334,134 @@ class PR2_QLearning_Agent:
         self.MIN_EPSILON = 0.05
         self.DECAY = 0.995
 
-        self.ACTIONS = ["STOCK_MILK", "STOCK_BREAD", "STOCK_CEREAL"]
-        self.NUM_ACTIONS = len(self.ACTIONS)
-        self.NUM_STATES = 64
-        self.q_table = np.zeros((self.NUM_STATES, self.NUM_ACTIONS))
-
-        self.inventory = {
-            "MILK": 0,
-            "BREAD": 1,
-            "CEREAL": 3
+        self.ITEM_PROPERTIES = {
+            "MILK": {"dist": 5.0, "type": "PRODUCE", "start": 1},
+            "BREAD": {"dist": 2.0, "type": "DRY", "start": 1},
+            "CEREAL": {"dist": 3.0, "type": "DRY", "start": 3},
         }
 
-    def get_discrete_level(self, val):
-        return val
+        self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
+        self.NUM_ACTIONS = len(self.ACTIONS)  # Now 8 actions
 
-    def get_state_index(self):
-        m = self.get_discrete_level(self.inventory["MILK"])
-        b = self.get_discrete_level(self.inventory["BREAD"])
-        c = self.get_discrete_level(self.inventory["CEREAL"])
-        return c + (b * 4) + (m * 16)
+        self.q_table = {}
 
-    def choose_action(self, state_idx):
+        self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
+
+    def get_state_tuple(self):
+        """
+        Returns a tuple representing the state of all 8 items.
+        Example: (0, 3, 2, 1, 0, 3, 2, 1)
+        This tuple is used as the 'Key' for the Q-Table dictionary.
+        """
+        current_levels = []
+        for item in self.ACTIONS:
+            current_levels.append(self.inventory[item])
+        return tuple(current_levels)
+
+    def get_q_values(self, state):
+        """
+        Helper to get Q-values for a state.
+        If state doesn't exist in dict yet, initialize it with zeros.
+        """
+        if state not in self.q_table:
+            self.q_table[state] = np.zeros(self.NUM_ACTIONS)
+        return self.q_table[state]
+
+    def choose_action(self, state):
         if random.uniform(0, 1) < self.EPSILON:
             return random.randint(0, self.NUM_ACTIONS - 1)
         else:
-            return np.argmax(self.q_table[state_idx])
+            q_vals = self.get_q_values(state)
+            return np.argmax(q_vals)
 
     def execute_action_text_mode(self, action_idx):
-        action_name = self.ACTIONS[action_idx]
-        print(f"Action: {action_name}")
+        item_name = self.ACTIONS[action_idx]
+        props = self.ITEM_PROPERTIES[item_name]
 
-        item_key = action_name.split("_")[1]
+        print(f"   [ACTION] Go to {item_name} (Dist: {props['dist']}m, Type: {props['type']})...")
 
-        if self.inventory[item_key] < 3:
-            self.inventory[item_key] += 1
+        if self.inventory[item_name] < 3:
+            self.inventory[item_name] += 1
+            print(f"   [RESULT] Restocked. Level: {self.inventory[item_name]}")
             return True
         else:
+            print(f"   [FAIL] {item_name} is full.")
             return False
 
     def calculate_reward(self, old_inv, action_idx, success):
-        action_name = self.ACTIONS[action_idx]
-        item_key = action_name.split("_")[1]
-        old_level = old_inv[item_key]
+        item_name = self.ACTIONS[action_idx]
+        props = self.ITEM_PROPERTIES[item_name]
+        old_level = old_inv[item_name]
 
-        reward = 0
-
+        base_reward = 0
         if old_level == 0:
-            reward += 50
+            base_reward = 50
         elif old_level == 1:
-            reward += 20
+            base_reward = 20
+        elif old_level == 3:
+            base_reward = -10
 
-        if old_level == 3:
-            reward -= 10
+        multiplier = 1.0
+        if props['type'] == "FROZEN":
+            multiplier = 2.0
+        elif props['type'] == "PRODUCE":
+            multiplier = 1.5
 
-        reward -= 1
-        return reward
+        final_stock_reward = base_reward * multiplier
+
+        distance_penalty = props['dist'] * 0.5
+
+        total_reward = final_stock_reward - distance_penalty
+
+        if not success and old_level != 3:
+            total_reward -= 5
+
+        return total_reward
 
     def update_q_table(self, s, a, r, s_prime):
-        old_q = self.q_table[s, a]
-        next_max = np.max(self.q_table[s_prime])
+        q_values = self.get_q_values(s)
+        old_q = q_values[a]
+
+        next_q_values = self.get_q_values(s_prime)
+        next_max = np.max(next_q_values)
+
         new_q = old_q + self.ALPHA * (r + self.GAMMA * next_max - old_q)
-        self.q_table[s, a] = new_q
+
+        self.q_table[s][a] = new_q
 
     def train_text_mode(self):
-        print("Starting Q-Learning...")
+        print("Starting Complex Q-Learning (8 Items, Dist + Type)...")
         episode = 0
+
+
         while robot.step(TIME_STEP) != -1:
             episode += 1
-            state_idx = self.get_state_index()
-            old_inventory = self.inventory.copy()
+            state = self.get_state_tuple()
+            old_inv = self.inventory.copy()
 
-            print(f"\nEp {episode} | Eps: {self.EPSILON:.2f} | Inv: {self.inventory}")
+            print(f"\n--- Ep {episode} | Eps: {self.EPSILON:.2f} ---")
 
-            action_idx = self.choose_action(state_idx)
+            action_idx = self.choose_action(state)
             success = self.execute_action_text_mode(action_idx)
 
-            reward = self.calculate_reward(old_inventory, action_idx, success)
-            next_state_idx = self.get_state_index()
+            reward = self.calculate_reward(old_inv, action_idx, success)
+            next_state = self.get_state_tuple()
 
-            print(f"Reward: {reward}")
+            print(f"   [REWARD] {reward:.1f}")
 
-            self.update_q_table(state_idx, action_idx, reward, next_state_idx)
+            self.update_q_table(state, action_idx, reward, next_state)
 
             if self.EPSILON > self.MIN_EPSILON:
                 self.EPSILON *= self.DECAY
 
-            if episode % 20 == 0:
-                self.inventory = {
-                    "MILK": random.randint(0, 3),
-                    "BREAD": random.randint(0, 3),
-                    "CEREAL": random.randint(0, 3)
-                }
+            if episode % 30 == 0:
+                for k in self.inventory:
+                    self.inventory[k] = random.randint(0, 3)
 
 
 if __name__ == "__main__":
     initialize_devices()
     enable_devices()
-    set_initial_position()
 
-    agent = PR2_QLearning_Agent()
-    agent.train_text_mode()
+    agent = PR2_Complex_RL_Agent()
+    agent.train_text_mode()()
