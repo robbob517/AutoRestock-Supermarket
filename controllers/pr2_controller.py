@@ -326,48 +326,56 @@ def set_initial_position():
     set_torso_height(0.2, True)
 
 
-class PR2_Complex_RL_Agent:
+class PR2_qlearn_Agent:
     def __init__(self):
+        # 1. Hyperparameters
         self.ALPHA = 0.1
         self.GAMMA = 0.9
         self.EPSILON = 1.0
         self.MIN_EPSILON = 0.05
-        self.DECAY = 0.995
+        self.DECAY = 0.999
+
 
         self.ITEM_PROPERTIES = {
+            "ICE_CREAM": {"dist": 12.0, "type": "FROZEN", "start": 0},
+            "PIZZA": {"dist": 10.0, "type": "FROZEN", "start": 1},
+            "CHICKEN": {"dist": 11.0, "type": "FROZEN", "start": 0},
+            "PEAS": {"dist": 10.0, "type": "FROZEN", "start": 2},
+
             "MILK": {"dist": 5.0, "type": "PRODUCE", "start": 1},
+            "APPLES": {"dist": 4.0, "type": "PRODUCE", "start": 1},
+            "BANANAS": {"dist": 4.0, "type": "PRODUCE", "start": 0},
+            "EGGS": {"dist": 5.0, "type": "PRODUCE", "start": 2},
+            "YOGURT": {"dist": 5.5, "type": "PRODUCE", "start": 3},
+
             "BREAD": {"dist": 2.0, "type": "DRY", "start": 1},
             "CEREAL": {"dist": 3.0, "type": "DRY", "start": 3},
-            "ICE_CREAM": {"dist": 12.0, "type": "FROZEN", "start": 0},
-            "APPLES": {"dist": 4.0, "type": "PRODUCE", "start": 1},
             "WATER": {"dist": 8.0, "type": "DRY", "start": 2},
-            "PIZZA": {"dist": 10.0, "type": "FROZEN", "start": 1},
-            "CHIPS": {"dist": 2.0, "type": "DRY", "start": 0}
+            "CHIPS": {"dist": 2.0, "type": "DRY", "start": 0},
+            "PASTA": {"dist": 3.0, "type": "DRY", "start": 1},
+
+            "SOAP": {"dist": 9.0, "type": "NON_FOOD", "start": 1}
         }
 
         self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
-        self.NUM_ACTIONS = len(self.ACTIONS)  # Now 8 actions
+        self.NUM_ACTIONS = len(self.ACTIONS)  # 15 Actions
 
         self.q_table = {}
 
         self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
 
     def get_state_tuple(self):
-        """
-        Returns a tuple representing the state of all 8 items.
-        Example: (0, 3, 2, 1, 0, 3, 2, 1)
-        This tuple is used as the 'Key' for the Q-Table dictionary.
-        """
         current_levels = []
         for item in self.ACTIONS:
-            current_levels.append(self.inventory[item])
+            val = self.inventory[item]
+            if val <= 1:
+                state_val = 0
+            else:
+                state_val = 1
+            current_levels.append(state_val)
         return tuple(current_levels)
 
     def get_q_values(self, state):
-        """
-        Helper to get Q-values for a state.
-        If state doesn't exist in dict yet, initialize it with zeros.
-        """
         if state not in self.q_table:
             self.q_table[state] = np.zeros(self.NUM_ACTIONS)
         return self.q_table[state]
@@ -385,9 +393,10 @@ class PR2_Complex_RL_Agent:
 
         print(f"   [ACTION] Go to {item_name} (Dist: {props['dist']}m, Type: {props['type']})...")
 
+        # Stock increases by 1, cap at 3
         if self.inventory[item_name] < 3:
             self.inventory[item_name] += 1
-            print(f"   [RESULT] Restocked. Level: {self.inventory[item_name]}")
+            print(f"   [RESULT] Restocked {item_name}. Level: {self.inventory[item_name]}")
             return True
         else:
             print(f"   [FAIL] {item_name} is full.")
@@ -400,21 +409,24 @@ class PR2_Complex_RL_Agent:
 
         base_reward = 0
         if old_level == 0:
-            base_reward = 50
+            base_reward = 60
         elif old_level == 1:
-            base_reward = 20
+            base_reward = 30
         elif old_level == 3:
-            base_reward = -10
+            base_reward = -20
+
 
         multiplier = 1.0
         if props['type'] == "FROZEN":
-            multiplier = 2.0
+            multiplier = 2.5
         elif props['type'] == "PRODUCE":
             multiplier = 1.5
+        elif props['type'] == "NON_FOOD":
+            multiplier = 0.5
 
         final_stock_reward = base_reward * multiplier
 
-        distance_penalty = props['dist'] * 0.5
+        distance_penalty = props['dist'] * 0.8
 
         total_reward = final_stock_reward - distance_penalty
 
@@ -426,25 +438,20 @@ class PR2_Complex_RL_Agent:
     def update_q_table(self, s, a, r, s_prime):
         q_values = self.get_q_values(s)
         old_q = q_values[a]
-
-        next_q_values = self.get_q_values(s_prime)
-        next_max = np.max(next_q_values)
-
+        next_max = np.max(self.get_q_values(s_prime))
         new_q = old_q + self.ALPHA * (r + self.GAMMA * next_max - old_q)
-
         self.q_table[s][a] = new_q
 
     def train_text_mode(self):
-        print("Starting Complex Q-Learning (8 Items, Dist + Type)...")
+        print(f"Starting Q-Learning with {self.NUM_ACTIONS} items...")
         episode = 0
-
 
         while robot.step(TIME_STEP) != -1:
             episode += 1
             state = self.get_state_tuple()
             old_inv = self.inventory.copy()
 
-            print(f"\n--- Ep {episode} | Eps: {self.EPSILON:.2f} ---")
+            print(f"\n--- Ep {episode} | Eps: {self.EPSILON:.3f} ---")
 
             action_idx = self.choose_action(state)
             success = self.execute_action_text_mode(action_idx)
@@ -459,14 +466,21 @@ class PR2_Complex_RL_Agent:
             if self.EPSILON > self.MIN_EPSILON:
                 self.EPSILON *= self.DECAY
 
-            if episode % 30 == 0:
+            if episode % 50 == 0:
+                print(">>> Randomizing Inventory <<<")
                 for k in self.inventory:
                     self.inventory[k] = random.randint(0, 3)
 
+            if all(value == 3 for value in self.inventory.values()):
+                print(f"\n>>> VICTORY! The Supermarket is fully stocked! <<<")
+
+                print(">>> Starting new day (Episode Reset) to keep learning... <<<")
+                self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
+                episode += 1
 
 if __name__ == "__main__":
     initialize_devices()
     enable_devices()
 
-    agent = PR2_Complex_RL_Agent()
+    agent = PR2_qlearn_Agent()
     agent.train_text_mode()()
