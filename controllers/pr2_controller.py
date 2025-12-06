@@ -328,51 +328,63 @@ def set_initial_position():
 
 class PR2_qlearn_Agent:
     def __init__(self):
-        # 1. Hyperparameters
+
         self.ALPHA = 0.1
         self.GAMMA = 0.9
         self.EPSILON = 1.0
         self.MIN_EPSILON = 0.05
         self.DECAY = 0.999
 
-
         self.ITEM_PROPERTIES = {
-            "ICE_CREAM": {"dist": 12.0, "type": "FROZEN", "start": 0},
-            "PIZZA": {"dist": 10.0, "type": "FROZEN", "start": 1},
-            "CHICKEN": {"dist": 11.0, "type": "FROZEN", "start": 0},
-            "PEAS": {"dist": 10.0, "type": "FROZEN", "start": 2},
-
-            "MILK": {"dist": 5.0, "type": "PRODUCE", "start": 1},
-            "APPLES": {"dist": 4.0, "type": "PRODUCE", "start": 1},
-            "BANANAS": {"dist": 4.0, "type": "PRODUCE", "start": 0},
+            "ICE_CREAM": {"dist": 12.0, "type": "FROZEN", "start": 2},
+            "PIZZA": {"dist": 10.0, "type": "FROZEN", "start": 2},
+            "CHICKEN": {"dist": 11.0, "type": "FROZEN", "start": 1},
+            "PEAS": {"dist": 10.0, "type": "FROZEN", "start": 0},
+            "MILK": {"dist": 5.0, "type": "PRODUCE", "start": 3},
+            "APPLES": {"dist": 4.0, "type": "PRODUCE", "start": 5},
+            "BANANAS": {"dist": 4.0, "type": "PRODUCE", "start": 2},
             "EGGS": {"dist": 5.0, "type": "PRODUCE", "start": 2},
             "YOGURT": {"dist": 5.5, "type": "PRODUCE", "start": 3},
-
-            "BREAD": {"dist": 2.0, "type": "DRY", "start": 1},
-            "CEREAL": {"dist": 3.0, "type": "DRY", "start": 3},
-            "WATER": {"dist": 8.0, "type": "DRY", "start": 2},
-            "CHIPS": {"dist": 2.0, "type": "DRY", "start": 0},
-            "PASTA": {"dist": 3.0, "type": "DRY", "start": 1},
-
-            "SOAP": {"dist": 9.0, "type": "NON_FOOD", "start": 1}
+            "BREAD": {"dist": 2.0, "type": "DRY", "start": 4},
+            "CEREAL": {"dist": 3.0, "type": "DRY", "start": 0},
+            "WATER": {"dist": 8.0, "type": "DRY", "start": 4},
+            "CHIPS": {"dist": 2.0, "type": "DRY", "start": 1},
+            "PASTA": {"dist": 3.0, "type": "DRY", "start": 7},
+            "SOAP": {"dist": 9.0, "type": "NON_FOOD", "start": 2}
         }
 
         self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
-        self.NUM_ACTIONS = len(self.ACTIONS)  # 15 Actions
-
+        self.NUM_ACTIONS = len(self.ACTIONS)
         self.q_table = {}
 
         self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
 
+    def get_discrete_level(self, count):
+        """
+        Maps the raw stock count (0-10) to a specific State Category.
+        0 = Critical (0-3)
+        1 = OK (4-7)
+        2 = Good (8-9)
+        3 = Stocked (10)
+        """
+        if count <= 3:
+            return 0  # Critical
+        elif count <= 7:
+            return 1  # OK
+        elif count <= 9:
+            return 2  # Good
+        else:
+            return 3  # Stocked (Full)
+
     def get_state_tuple(self):
+        """
+        Returns a tuple of discrete levels (0, 1, 2, or 3) for all items.
+        """
         current_levels = []
         for item in self.ACTIONS:
-            val = self.inventory[item]
-            if val <= 1:
-                state_val = 0
-            else:
-                state_val = 1
-            current_levels.append(state_val)
+            raw_count = self.inventory[item]
+            state_cat = self.get_discrete_level(raw_count)
+            current_levels.append(state_cat)
         return tuple(current_levels)
 
     def get_q_values(self, state):
@@ -390,44 +402,47 @@ class PR2_qlearn_Agent:
     def execute_action_text_mode(self, action_idx, step_num):
         item_name = self.ACTIONS[action_idx]
         props = self.ITEM_PROPERTIES[item_name]
-        print(f"   [Step {step_num} | Eps: {self.EPSILON:.4f}] Go to {item_name} (Dist: {props['dist']}m, Type: {props['type']})...")
-        if self.inventory[item_name] < 3:
+        print(f"   [Step {step_num} | Eps: {self.EPSILON:.4f}] Stocking {item_name} (Type: {props['type']})...")
+        if self.inventory[item_name] < 10:
             self.inventory[item_name] += 1
-            print(f"   [RESULT] Restocked {item_name}. Level: {self.inventory[item_name]}")
+            new_level = self.inventory[item_name]
+            status = "CRITICAL" if new_level <= 3 else "OK" if new_level <= 7 else "GOOD" if new_level <= 9 else "FULL"
+            print(f"   [RESULT] Level: {new_level}/10 ({status})")
             return True
         else:
-            print(f"   [FAIL] {item_name} is full.")
+            print(f"   [FAIL] {item_name} is already at 10/10.")
             return False
 
     def calculate_reward(self, old_inv, action_idx, success):
         item_name = self.ACTIONS[action_idx]
         props = self.ITEM_PROPERTIES[item_name]
-        old_level = old_inv[item_name]
+        old_count = old_inv[item_name]
+        old_cat = self.get_discrete_level(old_count)
 
         base_reward = 0
-        if old_level == 0:
-            base_reward = 60
-        elif old_level == 1:
-            base_reward = 30
-        elif old_level == 3:
-            base_reward = -20
 
+        if old_cat == 0:
+            base_reward = 80
+        elif old_cat == 1:
+            base_reward = 40
+        elif old_cat == 2:
+            base_reward = 10
+        elif old_cat == 3:
+            base_reward = -20
 
         multiplier = 1.0
         if props['type'] == "FROZEN":
-            multiplier = 2.5
+            multiplier = 2.0
         elif props['type'] == "PRODUCE":
             multiplier = 1.5
         elif props['type'] == "NON_FOOD":
             multiplier = 0.5
 
         final_stock_reward = base_reward * multiplier
-
-        distance_penalty = props['dist'] * 0.8
-
+        distance_penalty = props['dist'] * 0.5
         total_reward = final_stock_reward - distance_penalty
 
-        if not success and old_level != 3:
+        if not success and old_count != 10:
             total_reward -= 5
 
         return total_reward
@@ -440,7 +455,7 @@ class PR2_qlearn_Agent:
         self.q_table[s][a] = new_q
 
     def train_text_mode(self):
-        print(f"Starting Q-Learning with {self.NUM_ACTIONS} items...")
+        print(f"Starting Q-Learning (Goal: All items to 10/10)...")
         episode = 0
         steps_this_day = 0
         while robot.step(TIME_STEP) != -1:
@@ -459,17 +474,16 @@ class PR2_qlearn_Agent:
             if self.EPSILON > self.MIN_EPSILON:
                 self.EPSILON *= self.DECAY
 
-            if all(value == 3 for value in self.inventory.values()):
-                print(f"\n>>> VICTORY! The Supermarket is fully stocked! <<<")
+            if all(value == 10 for value in self.inventory.values()):
+                print(f"\n>>> VICTORY! Store fully stocked (10/10) <<<")
 
-
-                if steps_this_day < 60:
-                    print(f">>> PERFORMANCE GOAL MET! Finished in {steps_this_day} steps. Stopping Code. <<<")
+                # Goal adjusted for higher stock count (approx 15 items * 5-8 missing stock each = ~100 steps ideally)
+                # Setting goal to 200 for margin
+                if steps_this_day < 200:
+                    print(f">>> PERFORMANCE GOAL MET! Finished in {steps_this_day} steps. <<<")
                     break
-                print(f">>> Day finished in {steps_this_day} steps (Goal < 400). Too slow. Resetting... <<<")
-
+                print(f">>> Day finished in {steps_this_day} steps. Resetting... <<<")
                 self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
-
                 steps_this_day = 0
 
 if __name__ == "__main__":
