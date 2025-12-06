@@ -3,10 +3,10 @@ from controller import Robot
 from controller import Supervisor
 import math
 import sys
+import random
 
 TIME_STEP = 32
 
-# PR2 constants
 MAX_WHEEL_SPEED = 3.0
 WHEELS_DISTANCE = 0.4492
 SUB_WHEELS_DISTANCE = 0.098
@@ -20,17 +20,14 @@ TOLERANCE = 0.05
 def ALMOST_EQUAL(a, b):
     return (a < b + TOLERANCE) and (a > b - TOLERANCE)
 
-# motor index definitions
+
 FLL_WHEEL, FLR_WHEEL, FRL_WHEEL, FRR_WHEEL, BLL_WHEEL, BLR_WHEEL, BRL_WHEEL, BRR_WHEEL = range(8)
 FL_ROTATION, FR_ROTATION, BL_ROTATION, BR_ROTATION = range(4)
 SHOULDER_ROLL, SHOULDER_LIFT, UPPER_ARM_ROLL, ELBOW_LIFT, WRIST_ROLL = range(5)
 LEFT_FINGER, RIGHT_FINGER = 0, 1
 
-# Create robot instance
-#robot = Robot()
 robot = Supervisor()
 
-# Device containers
 wheel_motors = [None] * 8
 wheel_sensors = [None] * 8
 rotation_motors = [None] * 4
@@ -61,13 +58,11 @@ laser_tilt = None
 base_laser = None
 
 
-# Simple step
 def step():
     if robot.step(TIME_STEP) == -1:
         sys.exit(0)
 
 
-# Initialize devices
 def initialize_devices():
     global left_finger_motor, left_finger_sensor
     global right_finger_motor, right_finger_sensor
@@ -94,8 +89,8 @@ def initialize_devices():
         rotation_sensors[i] = rotation_motors[i].getPositionSensor()
 
     left_arm_names = [
-        "l_shoulder_pan_joint","l_shoulder_lift_joint",
-        "l_upper_arm_roll_joint","l_elbow_flex_joint",
+        "l_shoulder_pan_joint", "l_shoulder_lift_joint",
+        "l_upper_arm_roll_joint", "l_elbow_flex_joint",
         "l_wrist_roll_joint"
     ]
     for i in range(5):
@@ -103,8 +98,8 @@ def initialize_devices():
         left_arm_sensors[i] = left_arm_motors[i].getPositionSensor()
 
     right_arm_names = [
-        "r_shoulder_pan_joint","r_shoulder_lift_joint",
-        "r_upper_arm_roll_joint","r_elbow_flex_joint",
+        "r_shoulder_pan_joint", "r_shoulder_lift_joint",
+        "r_upper_arm_roll_joint", "r_elbow_flex_joint",
         "r_wrist_roll_joint"
     ]
     for i in range(5):
@@ -121,21 +116,22 @@ def initialize_devices():
     right_finger_contact_sensors[LEFT_FINGER] = robot.getDevice("r_gripper_l_finger_tip_contact_sensor")
     right_finger_contact_sensors[RIGHT_FINGER] = robot.getDevice("r_gripper_r_finger_tip_contact_sensor")
 
-    head_tilt_motor = robot.getDevice("head_tilt_joint")
-    torso_motor = robot.getDevice("torso_lift_joint")
-    torso_sensor = robot.getDevice("torso_lift_joint_sensor")
+    try:
+        head_tilt_motor = robot.getDevice("head_tilt_joint")
+        torso_motor = robot.getDevice("torso_lift_joint")
+        torso_sensor = robot.getDevice("torso_lift_joint_sensor")
+        imu_sensor = robot.getDevice("imu_sensor")
+        wide_stereo_l = robot.getDevice("wide_stereo_l_stereo_camera_sensor")
+        wide_stereo_r = robot.getDevice("wide_stereo_r_stereo_camera_sensor")
+        high_def = robot.getDevice("high_def_sensor")
+        r_forearm = robot.getDevice("r_forearm_cam_sensor")
+        l_forearm = robot.getDevice("l_forearm_cam_sensor")
+        laser_tilt = robot.getDevice("laser_tilt")
+        base_laser = robot.getDevice("base_laser")
+    except:
+        pass
 
-    imu_sensor = robot.getDevice("imu_sensor")
-    wide_stereo_l = robot.getDevice("wide_stereo_l_stereo_camera_sensor")
-    wide_stereo_r = robot.getDevice("wide_stereo_r_stereo_camera_sensor")
-    high_def = robot.getDevice("high_def_sensor")
-    r_forearm = robot.getDevice("r_forearm_cam_sensor")
-    l_forearm = robot.getDevice("l_forearm_cam_sensor")
-    laser_tilt = robot.getDevice("laser_tilt")
-    base_laser = robot.getDevice("base_laser")
 
-
-# Enable devices
 def enable_devices():
     for i in range(8):
         wheel_sensors[i].enable(TIME_STEP)
@@ -156,12 +152,14 @@ def enable_devices():
         left_arm_sensors[i].enable(TIME_STEP)
         right_arm_sensors[i].enable(TIME_STEP)
 
-    torso_sensor.enable(TIME_STEP)
-    base_laser.enable(TIME_STEP)
-    imu_sensor.enable(TIME_STEP)
+    try:
+        torso_sensor.enable(TIME_STEP)
+        base_laser.enable(TIME_STEP)
+        imu_sensor.enable(TIME_STEP)
+    except:
+        pass
 
 
-# Set wheel speeds
 def set_wheels_speeds(*speeds):
     for i in range(8):
         wheel_motors[i].setVelocity(speeds[i])
@@ -173,7 +171,6 @@ def stop_wheels():
     set_wheels_speed(0)
 
 
-# Passive wheel torque control
 torques = [0.0] * 8
 
 def enable_passive_wheels(enable):
@@ -186,7 +183,6 @@ def enable_passive_wheels(enable):
             wheel_motors[i].setAvailableTorque(torques[i])
 
 
-# Set caster rotation angles
 def set_rotation_wheels_angles(fl, fr, bl, br, wait_on_feedback):
     if wait_on_feedback:
         stop_wheels()
@@ -210,60 +206,45 @@ def set_rotation_wheels_angles(fl, fr, bl, br, wait_on_feedback):
         enable_passive_wheels(False)
 
 
-# Rotate robot in-place
 def robot_rotate(angle):
     stop_wheels()
-
-    set_rotation_wheels_angles(3*math.pi/4, math.pi/4, -3*math.pi/4, -math.pi/4, True)
+    set_rotation_wheels_angles(3 * math.pi / 4, math.pi / 4, -3 * math.pi / 4, -math.pi / 4, True)
 
     speed = MAX_WHEEL_SPEED if angle > 0 else -MAX_WHEEL_SPEED
     set_wheels_speed(speed)
 
-    imu_roll, imu_pitch, imu_yaw = imu_sensor.getRollPitchYaw()
-    initial_heading = imu_yaw
-    target_heading = initial_heading + angle
-    #init_pos = wheel_sensors[FLL_WHEEL].getValue()
-    #expected = abs(angle * 0.5 * (WHEELS_DISTANCE + SUB_WHEELS_DISTANCE))
-
-    while True:
+    if imu_sensor:
         imu_roll, imu_pitch, imu_yaw = imu_sensor.getRollPitchYaw()
-        current_heading = imu_yaw
-        error = target_heading - current_heading
+        initial_heading = imu_yaw
+        target_heading = initial_heading + angle
 
-        if error > math.pi:
-         error -= 2 * math.pi
-        elif error < -math.pi:
-            error += 2 * math.pi
+        while True:
+            imu_roll, imu_pitch, imu_yaw = imu_sensor.getRollPitchYaw()
+            current_heading = imu_yaw
+            error = target_heading - current_heading
 
-        if abs(error) <= ANGLE_TOLERANCE_RAD:
-            break
-        speed = KP_GAIN * error
-        speed = max(-MAX_WHEEL_SPEED, min(MAX_WHEEL_SPEED, speed))
+            if error > math.pi:
+                error -= 2 * math.pi
+            elif error < -math.pi:
+                error += 2 * math.pi
 
-        if abs(speed) < MIN_SPEED:
-            speed = MIN_SPEED * np.sign(error)
-        set_wheels_speed(speed)
-        step()
-    '''
-    while True:
-        pos = wheel_sensors[FLL_WHEEL].getValue()
-        travel = abs(WHEEL_RADIUS * (pos - init_pos))
+            if abs(error) <= ANGLE_TOLERANCE_RAD:
+                break
+            speed = KP_GAIN * error
+            speed = max(-MAX_WHEEL_SPEED, min(MAX_WHEEL_SPEED, speed))
 
-        if travel > expected:
-            break
+            if abs(speed) < MIN_SPEED:
+                speed = MIN_SPEED * np.sign(error)
+            set_wheels_speed(speed)
+            step()
 
-        if expected - travel < 0.025:
-            set_wheels_speed(0.1 * speed)
-    '''
     set_rotation_wheels_angles(0, 0, 0, 0, True)
     stop_wheels()
 
 
-# Move robot forward by distance
 def robot_go_forward(dist):
     speed = MAX_WHEEL_SPEED if dist > 0 else -MAX_WHEEL_SPEED
     set_wheels_speed(speed)
-
     init_pos = wheel_sensors[FLL_WHEEL].getValue()
 
     while True:
@@ -272,22 +253,17 @@ def robot_go_forward(dist):
 
         if travel > abs(dist):
             break
-
         if abs(dist) - travel < 0.025:
             set_wheels_speed(0.1 * speed)
-
         step()
 
     stop_wheels()
 
 
-# Gripper control
 def set_gripper(left, open_gripper, torqueWhenGripping, wait):
     motor = left_finger_motor if left else right_finger_motor
     sensor = left_finger_sensor if left else right_finger_sensor
     contacts = left_finger_contact_sensors if left else right_finger_contact_sensors
-
-    maxTorque = motor.getAvailableTorque()
 
     if open_gripper:
         target = 0.5
@@ -310,11 +286,9 @@ def set_gripper(left, open_gripper, torqueWhenGripping, wait):
             motor.setPosition(max(0.0, 0.95 * current))
 
 
-# Arm control functions
 def set_right_arm_position(sR, sL, uR, eL, wR, wait):
     motors = right_arm_motors
     sensors = right_arm_sensors
-
     targets = [sR, sL, uR, eL, wR]
     for i in range(5):
         motors[i].setPosition(targets[i])
@@ -327,7 +301,6 @@ def set_right_arm_position(sR, sL, uR, eL, wR, wait):
 def set_left_arm_position(sR, sL, uR, eL, wR, wait):
     motors = left_arm_motors
     sensors = left_arm_sensors
-
     targets = [sR, sL, uR, eL, wR]
     for i in range(5):
         motors[i].setPosition(targets[i])
@@ -337,55 +310,127 @@ def set_left_arm_position(sR, sL, uR, eL, wR, wait):
             step()
 
 
-# Torso
 def set_torso_height(h, wait):
-    torso_motor.setPosition(h)
-    if wait:
-        while not ALMOST_EQUAL(torso_sensor.getValue(), h):
-            step()
+    if torso_motor:
+        torso_motor.setPosition(h)
+        if wait:
+            while not ALMOST_EQUAL(torso_sensor.getValue(), h):
+                step()
 
 
-# Initial position
 def set_initial_position():
     set_left_arm_position(0, 1.35, 0, -2.2, 0, False)
     set_right_arm_position(0, 1.35, 0, -2.2, 0, False)
-
     set_gripper(False, True, 0, False)
     set_gripper(True, True, 0, False)
-
     set_torso_height(0.2, True)
 
 
-# -----------------------------------------------------
-# MAIN
-# -----------------------------------------------------
-'''
-initialize_devices()
-enable_devices()
-set_initial_position()
-'''
+class PR2_QLearning_Agent:
+    def __init__(self):
+        self.ALPHA = 0.1
+        self.GAMMA = 0.9
+        self.EPSILON = 1.0
+        self.MIN_EPSILON = 0.05
+        self.DECAY = 0.995
 
-'''
-# Move arms
-set_left_arm_position(0, 0.5, 0, -0.5, 0, True)
-set_right_arm_position(0, 0.5, 0, -0.5, 0, True)
-robot_go_forward(0.35)
+        self.ACTIONS = ["STOCK_MILK", "STOCK_BREAD", "STOCK_CEREAL"]
+        self.NUM_ACTIONS = len(self.ACTIONS)
+        self.NUM_STATES = 64
+        self.q_table = np.zeros((self.NUM_STATES, self.NUM_ACTIONS))
 
-# Main loop
-while True:
-    set_gripper(True, False, 20.0, True)
-    set_gripper(False, False, 20.0, True)
+        self.inventory = {
+            "MILK": 0,
+            "BREAD": 1,
+            "CEREAL": 3
+        }
 
-    set_left_arm_position(0, 0.5, 0, -1.0, 0, True)
-    set_right_arm_position(0, 0.5, 0, -1.0, 0, True)
+    def get_discrete_level(self, val):
+        return val
 
-    robot_go_forward(-0.35)
-    robot_rotate(math.pi)
-    robot_go_forward(0.35)
+    def get_state_index(self):
+        m = self.get_discrete_level(self.inventory["MILK"])
+        b = self.get_discrete_level(self.inventory["BREAD"])
+        c = self.get_discrete_level(self.inventory["CEREAL"])
+        return c + (b * 4) + (m * 16)
 
-    set_left_arm_position(0, 0.5, 0, -0.5, 0, True)
-    set_right_arm_position(0, 0.5, 0, -0.5, 0, True)
+    def choose_action(self, state_idx):
+        if random.uniform(0, 1) < self.EPSILON:
+            return random.randint(0, self.NUM_ACTIONS - 1)
+        else:
+            return np.argmax(self.q_table[state_idx])
 
-    set_gripper(True, True, 0, True)
-    set_gripper(False, True, 0, True)
-'''
+    def execute_action_text_mode(self, action_idx):
+        action_name = self.ACTIONS[action_idx]
+        print(f"Action: {action_name}")
+
+        item_key = action_name.split("_")[1]
+
+        if self.inventory[item_key] < 3:
+            self.inventory[item_key] += 1
+            return True
+        else:
+            return False
+
+    def calculate_reward(self, old_inv, action_idx, success):
+        action_name = self.ACTIONS[action_idx]
+        item_key = action_name.split("_")[1]
+        old_level = old_inv[item_key]
+
+        reward = 0
+
+        if old_level == 0:
+            reward += 50
+        elif old_level == 1:
+            reward += 20
+
+        if old_level == 3:
+            reward -= 10
+
+        reward -= 1
+        return reward
+
+    def update_q_table(self, s, a, r, s_prime):
+        old_q = self.q_table[s, a]
+        next_max = np.max(self.q_table[s_prime])
+        new_q = old_q + self.ALPHA * (r + self.GAMMA * next_max - old_q)
+        self.q_table[s, a] = new_q
+
+    def train_text_mode(self):
+        print("Starting Q-Learning...")
+        episode = 0
+        while robot.step(TIME_STEP) != -1:
+            episode += 1
+            state_idx = self.get_state_index()
+            old_inventory = self.inventory.copy()
+
+            print(f"\nEp {episode} | Eps: {self.EPSILON:.2f} | Inv: {self.inventory}")
+
+            action_idx = self.choose_action(state_idx)
+            success = self.execute_action_text_mode(action_idx)
+
+            reward = self.calculate_reward(old_inventory, action_idx, success)
+            next_state_idx = self.get_state_index()
+
+            print(f"Reward: {reward}")
+
+            self.update_q_table(state_idx, action_idx, reward, next_state_idx)
+
+            if self.EPSILON > self.MIN_EPSILON:
+                self.EPSILON *= self.DECAY
+
+            if episode % 20 == 0:
+                self.inventory = {
+                    "MILK": random.randint(0, 3),
+                    "BREAD": random.randint(0, 3),
+                    "CEREAL": random.randint(0, 3)
+                }
+
+
+if __name__ == "__main__":
+    initialize_devices()
+    enable_devices()
+    set_initial_position()
+
+    agent = PR2_QLearning_Agent()
+    agent.train_text_mode()
