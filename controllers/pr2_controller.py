@@ -338,6 +338,11 @@ class PR2_Complex_RL_Agent:
             "MILK": {"dist": 5.0, "type": "PRODUCE", "start": 1},
             "BREAD": {"dist": 2.0, "type": "DRY", "start": 1},
             "CEREAL": {"dist": 3.0, "type": "DRY", "start": 3},
+            "ICE_CREAM": {"dist": 12.0, "type": "FROZEN", "start": 0},
+            "APPLES": {"dist": 4.0, "type": "PRODUCE", "start": 1},
+            "WATER": {"dist": 8.0, "type": "DRY", "start": 2},
+            "PIZZA": {"dist": 10.0, "type": "FROZEN", "start": 1},
+            "CHIPS": {"dist": 2.0, "type": "DRY", "start": 0}
         }
 
         self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
