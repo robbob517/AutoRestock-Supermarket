@@ -445,38 +445,35 @@ class PR2_qlearn_Agent:
     def train_text_mode(self):
         print(f"Starting Q-Learning with {self.NUM_ACTIONS} items...")
         episode = 0
-
+        steps_this_day = 0
         while robot.step(TIME_STEP) != -1:
             episode += 1
+            steps_this_day += 1
+
             state = self.get_state_tuple()
             old_inv = self.inventory.copy()
-
-            print(f"\n--- Ep {episode} | Eps: {self.EPSILON:.3f} ---")
-
             action_idx = self.choose_action(state)
             success = self.execute_action_text_mode(action_idx)
 
             reward = self.calculate_reward(old_inv, action_idx, success)
             next_state = self.get_state_tuple()
-
-            print(f"   [REWARD] {reward:.1f}")
-
             self.update_q_table(state, action_idx, reward, next_state)
 
             if self.EPSILON > self.MIN_EPSILON:
                 self.EPSILON *= self.DECAY
 
-            if episode % 50 == 0:
-                print(">>> Randomizing Inventory <<<")
-                for k in self.inventory:
-                    self.inventory[k] = random.randint(0, 3)
-
             if all(value == 3 for value in self.inventory.values()):
                 print(f"\n>>> VICTORY! The Supermarket is fully stocked! <<<")
 
-                print(">>> Starting new day (Episode Reset) to keep learning... <<<")
+
+                if steps_this_day < 400:
+                    print(f">>> PERFORMANCE GOAL MET! Finished in {steps_this_day} steps. Stopping Code. <<<")
+                    break
+                print(f">>> Day finished in {steps_this_day} steps (Goal < 400). Too slow. Resetting... <<<")
+
                 self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
-                episode += 1
+
+                steps_this_day = 0
 
 if __name__ == "__main__":
     initialize_devices()
