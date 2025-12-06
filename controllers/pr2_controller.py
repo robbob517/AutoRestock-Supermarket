@@ -387,13 +387,10 @@ class PR2_qlearn_Agent:
             q_vals = self.get_q_values(state)
             return np.argmax(q_vals)
 
-    def execute_action_text_mode(self, action_idx):
+    def execute_action_text_mode(self, action_idx, step_num):
         item_name = self.ACTIONS[action_idx]
         props = self.ITEM_PROPERTIES[item_name]
-
-        print(f"   [ACTION] Go to {item_name} (Dist: {props['dist']}m, Type: {props['type']})...")
-
-        # Stock increases by 1, cap at 3
+        print(f"   [Step {step_num} | Eps: {self.EPSILON:.4f}] Go to {item_name} (Dist: {props['dist']}m, Type: {props['type']})...")
         if self.inventory[item_name] < 3:
             self.inventory[item_name] += 1
             print(f"   [RESULT] Restocked {item_name}. Level: {self.inventory[item_name]}")
@@ -453,7 +450,7 @@ class PR2_qlearn_Agent:
             state = self.get_state_tuple()
             old_inv = self.inventory.copy()
             action_idx = self.choose_action(state)
-            success = self.execute_action_text_mode(action_idx)
+            success = self.execute_action_text_mode(action_idx, steps_this_day)
 
             reward = self.calculate_reward(old_inv, action_idx, success)
             next_state = self.get_state_tuple()
@@ -466,7 +463,7 @@ class PR2_qlearn_Agent:
                 print(f"\n>>> VICTORY! The Supermarket is fully stocked! <<<")
 
 
-                if steps_this_day < 400:
+                if steps_this_day < 60:
                     print(f">>> PERFORMANCE GOAL MET! Finished in {steps_this_day} steps. Stopping Code. <<<")
                     break
                 print(f">>> Day finished in {steps_this_day} steps (Goal < 400). Too slow. Resetting... <<<")
