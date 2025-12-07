@@ -4,6 +4,8 @@ from controller import Supervisor
 import math
 import sys
 import random
+import pickle
+import os
 
 TIME_STEP = 32
 
@@ -355,9 +357,25 @@ class PR2_qlearn_Agent:
 
         self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
         self.NUM_ACTIONS = len(self.ACTIONS)
-        self.q_table = {}
+        self.q_table_file = "pr2_q_memory.pkl"
+        self.q_table = self.load_q_table()
 
         self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
+
+        def load_q_table(self):
+            if os.path.exists(self.q_table_file):
+                print(">>> BRAIN FOUND: Loading learned Q-Table from file... <<<")
+                with open(self.q_table_file, 'rb') as f:
+                    return pickle.load(f)
+            else:
+                print(">>> NO BRAIN FOUND: Starting with a fresh Q-Table. <<<")
+                return {}
+
+        def save_q_table(self):
+            print(">>> SAVING BRAIN: Writing Q-Table to file... <<<")
+            with open(self.q_table_file, 'wb') as f:
+                pickle.dump(self.q_table, f)
+
 
     def get_discrete_level(self, count):
         """
@@ -477,8 +495,8 @@ class PR2_qlearn_Agent:
             if all(value == 10 for value in self.inventory.values()):
                 print(f"\n>>> VICTORY! Store fully stocked (10/10) <<<")
 
-                # Goal adjusted for higher stock count (approx 15 items * 5-8 missing stock each = ~100 steps ideally)
-                # Setting goal to 200 for margin
+
+
                 if steps_this_day < 200:
                     print(f">>> PERFORMANCE GOAL MET! Finished in {steps_this_day} steps. <<<")
                     break
