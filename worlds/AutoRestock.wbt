@@ -3,15 +3,19 @@
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
-EXTERNPROTO "../protos/Wall.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
+EXTERNPROTO "../protos/Wall.proto"
 IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
+IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/BiscuitBox.proto"
+IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/CerealBox.proto"
+IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/HoneyJar.proto"
+IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/drinks/protos/Can.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.3249599590326138 -0.07245413170906247 0.9429482614776951 3.5560421433824057
-  position 22.761671008593254 10.770999792702536 18.96089626279141
+  orientation -0.20418368914634843 -0.20150905864691568 0.9579682251357929 4.656292066386268
+  position -2.3524924521876107 41.07505807339219 22.005127645489388
 }
 TexturedBackground {
 }
@@ -23,52 +27,53 @@ Robot {
   supervisor TRUE
 }
 Pr2 {
-  translation 0 -2.2 0
+  translation 0 -12 0
 }
-DEF SUPERMARKET_ENV Solid {
-    children [
-       DEF FLOOR Floor {
-         translation 0 -7.5 0
-         size 30 45
-       }
-       DEF WALLS Solid {
-          children [
-            Wall {
-              translation 15 -7.5 2.5
-              rotation 0 0 1 1.5708
-              name "East Wall"
-              size 45 0.2 5
-            }
-            Wall {
-              translation -15 -7.5 2.5
-              rotation 0 0 1 1.5708
-              name "West Wall"
-              size 45 0.2 5
-            }
-            Wall {
-              translation 0 15 2.5
-              name "North Wall"
-            }
-            Wall {
-              translation 0 -30 2.5
-              name "South Wall"
-            }
-            Wall {
-              translation -8 -15 2.5
-              name "Storage Divider Right"
-              size 14 0.2 5
-            }
-            Wall {
-              translation 8 -15 2.5
-              name "Storage Divider Left"
-              size 14 0.2 5
-            }
-          ]
-          name "Walls"
-       }
-       DEF SHELVES Solid {
-        children []
-        name "Shelves"
-       }
-   ]
+DEF SUPERMARKET_ENV Group {
+  children [
+    DEF FLOOR Floor {
+      size 20 30
+      tileSize 1 1
+    }
+    DEF WALLS Solid {
+      children [
+        Wall {
+          translation 10 0 2.5
+          rotation 0 0 1 1.5708
+          name "East Wall"
+        }
+        Wall {
+          translation -10 0 2.5
+          rotation 0 0 1 1.5708
+          name "West Wall"
+        }
+        Wall {
+          translation 0 14.9 2.5
+          name "North Wall"
+          size 19.8 0.2 5
+        }
+        Wall {
+          translation 0 -14.9 2.5
+          name "South Wall"
+          size 19.8 0.2 5
+        }
+        Wall {
+          translation -5.65 -8 2.5
+          name "Storage Divider Right"
+          size 8.5 0.2 5
+        }
+        Wall {
+          translation 5.65 -8 2.5
+          name "Storage Divider Left"
+          size 8.5 0.2 5
+        }
+      ]
+      name "Walls"
+    }
+    DEF SHELVES Solid {
+      name "Shelves"
+    }
+    DEF PRODUCTS Group {
+    }
+  ]
 }

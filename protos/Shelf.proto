@@ -5,116 +5,90 @@
 
 PROTO Shelf [
   field SFVec3f translation 0 0 1
-  field SFRotation rotation 0.5773451 0.577351 0.577351 2.0944
+  field SFRotation rotation 0 0 1 0
   field SFString name "shelf"
   field SFFloat height 2.5
-  field SFFloat width 2
+  field SFFloat width 4
   field SFFloat depth 0.5
-  field SFFloat shelfCount 4
+  field SFInt32 shelfCount 4
   field SFFloat thickness 0.05
+  field SFNode appearance PBRAppearance { baseColor 0.5 0.5 0.5 roughness 0.8 }
 ]
 {
   %<
-      let h = fields.height.value;
-      let w = fields.width.value;
-      let d = fields.depth.value;
-      let sc = fields.shelfCount.value + 1;
-      let t = fields.thickness.value;
+      let h = fields.height.value
+      let w = fields.width.value
+      let d = fields.depth.value
+      let sc = fields.shelfCount.value + 1
+      let t = fields.thickness.value
 
-      let shelfSpacing = (h - (sc * t)) / (sc - 1)
+      let shelfSpacing = (h - ((sc + 1) * t)) / (sc - 1)
       if (sc < 2) {
         shelfSpacing = 0
       }
-      >%
+  >%
 
   Solid {
     translation IS translation
     rotation IS rotation
     name IS name
 
-    children[
-      # Back Panel
-      Transform {
-        translation 0 %<= h/2 >% %<= -d/2 + t/2 >%
-        children [
-          Shape {
-            appearance PBRAppearance {}
-            geometry Box {size %<=w>% %<=h>% %<=t>%}
-          }
-        ]
-      }
+    children [
 
-      # Left Side Panel
-      Transform {
-        translation %<= -w/2 + t/2 >% %<= h/2 >% 0
-        rotation 0 1 0 1.5708
-        children [
-          Shape {
-            appearance PBRAppearance {}
-            geometry Box {size %<=d>% %<=h>% %<=t>%}
-          }
-        ]
-      }
+      DEF SHELF_GEOMETRY Group {
 
-      # Right Side Panel
-      Transform {
-        translation %<= w/2 - t/2 >% %<= h/2 >% 0
-        rotation 0 1 0 1.5708
         children [
-          Shape {
-            appearance PBRAppearance {}
-            geometry Box {size %<=d>% %<=h>% %<=t>%}
-          }
-        ]
-      }
 
-      # Shelves
-      %< for (let i = 0; i < sc - 1; i++ ) { >%
-        Transform {
-          translation 0 %<= (t/2) + (i * (shelfSpacing + t))>% 0
-          rotation -1 0 0 -1.5708
-          children [
-            Shape {
-              appearance PBRAppearance {}
-              geometry Box {size %<= w - (2*t) >% %<=d>% %<=t>%}
+          # Back Panel
+          Transform {
+            translation 0 %<= h/2 >% %<= -d/2 + t/2 >%
+            children [
+              Shape {
+                appearance IS appearance
+                geometry Box {size %<= w - (t*2) >% %<=h>% %<=t>%}
+              }
+            ]
+          }
+
+          # Left Side Panel
+          Transform {
+            translation %<= -w/2 + t/2 >% %<= h/2 >% 0
+            children [
+              Shape {
+                appearance IS appearance
+                geometry Box {size %<=t>% %<=h>% %<=d>%}
+              }
+            ]
+          }
+
+          # Right Side Panel
+          Transform {
+            translation %<= w/2 - t/2 >% %<= h/2 >% 0
+            children [
+              Shape {
+                appearance IS appearance
+                geometry Box {size %<=t>% %<=h>% %<=d>%}
+              }
+            ]
+          }
+
+          # Shelves
+          %< for (let i = 0; i < sc - 1; i++ ) { >%
+            Transform {
+              translation 0 %<= (t/2) + (i * (shelfSpacing + t))>% %<= t >%
+              children [
+                Shape {
+                  appearance IS appearance
+                  geometry Box {size %<= w - (2*t) >% %<= t >% %<= d + t >%}
+                }
+              ]
             }
-          ]
-        }
-      %< } >%
+          %< } >%
+        ]
+      }
     ]
 
-    boundingObject Group {
-      children [
-        # Back Panel
-        Transform {
-          translation 0 %<= h/2 >% %<= -d/2 + t/2 >%
-          children [ Box {size %<=w>% %<=h>% %<=t>%} ]
-        }
-
-        # Left Side Panel
-        Transform {
-          translation %<= -w/2 + t/2 >% %<= h/2 >% 0
-          rotation 0 1 0 1.5708
-          children [ Box {size %<=d>% %<=h>% %<=t>%} ]
-        }
-
-        # Right Side Panel
-        Transform {
-          translation %<= w/2 - t/2 >% %<= h/2 >% 0
-          rotation 0 1 0 1.5708
-          children [ Box {size %<=d>% %<=h>% %<=t>%} ]
-        }
-
-        # Shelves
-        %< for (let i = 0; i < sc - 1; i++ ) { >%
-          Transform {
-            translation 0 %<= (t/2) + (i * (shelfSpacing + t))>% 0
-            rotation -1 0 0 -1.5708
-            children [ Box {size %<= w - (2*t) >% %<=d>% %<=t>%} ]
-          }
-        %< } >%
-      ]
-    }
+    boundingObject USE SHELF_GEOMETRY
     physics NULL
   }
 }
