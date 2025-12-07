@@ -354,6 +354,9 @@ class PR2_qlearn_Agent:
             "PASTA": {"dist": 3.0, "type": "DRY", "start": 7},
             "SOAP": {"dist": 9.0, "type": "NON_FOOD", "start": 2}
         }
+        #dist is distance of robot from shelf that needs item
+        #type is the category of the item
+        #start is how much of the item is already in stock at the start of the stocking process
 
         self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
         self.NUM_ACTIONS = len(self.ACTIONS)
@@ -374,10 +377,10 @@ class PR2_qlearn_Agent:
             with open(self.q_table_file, 'wb') as f:
                 pickle.dump(self.q_table, f)
 
-
+    # implementing a system where amount of stocked items is categorized into 4 levels so that for larger sets q table doesnt need to grow exponentially
     def get_discrete_level(self, count):
         if count <= 3:
-            return 0  # Critical
+            return 0  # Bad
         elif count <= 7:
             return 1  # OK
         elif count <= 9:
@@ -406,6 +409,7 @@ class PR2_qlearn_Agent:
             return np.argmax(q_vals)
 
     def execute_action_text_mode(self, action_idx, step_num):
+        # text mode to check if q table is running well ( not really needed for actual robot)
         item_name = self.ACTIONS[action_idx]
         props = self.ITEM_PROPERTIES[item_name]
         print(f"   [Step {step_num} | Eps: {self.EPSILON:.4f}] Stocking {item_name} (Type: {props['type']})...")
@@ -436,6 +440,8 @@ class PR2_qlearn_Agent:
         elif old_cat == 3:
             base_reward = -20
 
+        # multiplier is higher if frozen goods are done first , then produce then non food since no real time constraint
+
         multiplier = 1.0
         if props['type'] == "FROZEN":
             multiplier = 2.0
@@ -461,7 +467,8 @@ class PR2_qlearn_Agent:
         self.q_table[s][a] = new_q
 
     def train_text_mode(self):
-        print(f"Starting Q-Learning (Goal: All items to 10/10)...")
+        # used to check if the q table is working correctly will be removed when the robot works on its own
+        print(f"Starting Q-Learning ")
         episode = 0
         steps_this_day = 0
         while robot.step(TIME_STEP) != -1:
@@ -481,14 +488,12 @@ class PR2_qlearn_Agent:
                 self.EPSILON *= self.DECAY
 
             if all(value == 10 for value in self.inventory.values()):
-                print(f"\n>>> VICTORY! Store fully stocked (10/10) <<<")
+                print(f"\n Store fully stocked ")
 
                 self.save_q_table()
 
                 if steps_this_day < 200:
-                    print(f">>> PERFORMANCE GOAL MET! Finished in {steps_this_day} steps. <<<")
                     break
-                print(f">>> Day finished in {steps_this_day} steps. Resetting... <<<")
                 self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
                 steps_this_day = 0
 
