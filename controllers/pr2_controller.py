@@ -331,11 +331,11 @@ def set_initial_position():
 class PR2_qlearn_Agent:
     def __init__(self):
 
-        self.ALPHA = 0.1
-        self.GAMMA = 0.9
-        self.EPSILON = 1.0
-        self.MIN_EPSILON = 0.05
-        self.DECAY = 0.999
+        self.ALPHA =0.1
+        self.GAMMA =0.9
+        self.EPSILON =1.0
+        self.MIN_EPSILON =0.05
+        self.DECAY =0.999
 
         self.ITEM_PROPERTIES = {
             "ICE_CREAM": {"dist": 12.0, "type": "FROZEN", "start": 2},
@@ -360,39 +360,40 @@ class PR2_qlearn_Agent:
 
         self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
         self.NUM_ACTIONS = len(self.ACTIONS)
-        self.q_table_file = "pr2_q_memory.pkl"
-        self.q_table = self.load_q_table()
+        self.q_table_file ="pr2_q_memory.pkl"
+        self.q_table =self.load_q_table()
 
         self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
 
-        def load_q_table(self):
+
+    def load_q_table(self):
             if os.path.exists(self.q_table_file):
-                with open(self.q_table_file, 'rb') as f:
+                with open(self.q_table_file,'rb') as f:
                     return pickle.load(f)
             else:
                 return {}
 
-        def save_q_table(self):
+    def save_q_table(self):
             print("saving q table")
-            with open(self.q_table_file, 'wb') as f:
-                pickle.dump(self.q_table, f)
+            with open(self.q_table_file,'wb') as f:
+                pickle.dump(self.q_table,f)
 
     # implementing a system where amount of stocked items is categorized into 4 levels so that for larger sets q table doesnt need to grow exponentially
     def get_discrete_level(self, count):
         if count <= 5:
-            return 0  # Bad
+            return 0  #Bad
         elif count <= 14:
-            return 1  # OK
+            return 1  #OK
         elif count <= 19:
-            return 2  # Good
+            return 2  #Good
         else:
-            return 3  # Stocked (Full)
+            return 3 #Stocked (Full)
 
     def get_state_tuple(self):
         current_levels = []
         for item in self.ACTIONS:
-            raw_count = self.inventory[item]
-            state_cat = self.get_discrete_level(raw_count)
+            raw_count =self.inventory[item]
+            state_cat =self.get_discrete_level(raw_count)
             current_levels.append(state_cat)
         return tuple(current_levels)
 
@@ -403,18 +404,18 @@ class PR2_qlearn_Agent:
 
     def choose_action(self, state):
         if random.uniform(0, 1) < self.EPSILON:
-            return random.randint(0, self.NUM_ACTIONS - 1)
+            return random.randint(0,self.NUM_ACTIONS - 1)
         else:
             q_vals = self.get_q_values(state)
             return np.argmax(q_vals)
 
     def execute_action_text_mode(self, action_idx, step_num):
         # text mode to check if q table is running well ( not really needed for actual robot)
-        item_name = self.ACTIONS[action_idx]
-        props = self.ITEM_PROPERTIES[item_name]
+        item_name= self.ACTIONS[action_idx]
+        props= self.ITEM_PROPERTIES[item_name]
         print(f"   [Step {step_num} | Eps: {self.EPSILON:.4f}] Stocking {item_name} (Type: {props['type']})...")
-        if self.inventory[item_name] < 20:
-            self.inventory[item_name] += 1
+        if self.inventory[item_name] <20:
+            self.inventory[item_name]+= 1
             new_level = self.inventory[item_name]
             status = "CRITICAL" if new_level <= 5 else "OK" if new_level <= 14 else "GOOD" if new_level <= 19 else "FULL"
             print(f"   [RESULT] Level: {new_level}/20 ({status})")
@@ -432,23 +433,23 @@ class PR2_qlearn_Agent:
         base_reward = 0
 
         if old_cat == 0:
-            base_reward = 80
+            base_reward= 80
         elif old_cat == 1:
-            base_reward = 40
+            base_reward= 40
         elif old_cat == 2:
-            base_reward = 10
+            base_reward= 10
         elif old_cat == 3:
-            base_reward = -20
+            base_reward= -20
 
         # multiplier is higher if frozen goods are done first , then produce then non food since no real time constraint
 
-        multiplier = 1.0
+        multiplier= 1.0
         if props['type'] == "FROZEN":
-            multiplier = 2.0
+            multiplier= 2.0
         elif props['type'] == "PRODUCE":
-            multiplier = 1.5
+            multiplier= 1.5
         elif props['type'] == "NON_FOOD":
-            multiplier = 0.5
+            multiplier= 0.5
 
         final_stock_reward = base_reward * multiplier
         distance_penalty = props['dist'] * 0.5
@@ -459,7 +460,7 @@ class PR2_qlearn_Agent:
 
         return total_reward
 
-    def update_q_table(self, s, a, r, s_prime):
+    def update_q_table(self,s,a,r,s_prime):
         q_values = self.get_q_values(s)
         old_q = q_values[a]
         next_max = np.max(self.get_q_values(s_prime))
@@ -472,27 +473,27 @@ class PR2_qlearn_Agent:
         episode = 0
         steps_this_day = 0
         while robot.step(TIME_STEP) != -1:
-            episode += 1
-            steps_this_day += 1
+            episode+=1
+            steps_this_day+= 1
 
-            state = self.get_state_tuple()
+            state =self.get_state_tuple()
             old_inv = self.inventory.copy()
             action_idx = self.choose_action(state)
-            success = self.execute_action_text_mode(action_idx, steps_this_day)
+            success =self.execute_action_text_mode(action_idx, steps_this_day)
 
             reward = self.calculate_reward(old_inv, action_idx, success)
             next_state = self.get_state_tuple()
-            self.update_q_table(state, action_idx, reward, next_state)
+            self.update_q_table(state,action_idx,reward,next_state)
 
             if self.EPSILON > self.MIN_EPSILON:
                 self.EPSILON *= self.DECAY
 
             if all(value == 20 for value in self.inventory.values()):
-                print(f"\n Store fully stocked ")
+                print(f"\n Store fully stocked")
 
                 self.save_q_table()
 
-                if steps_this_day < 300:
+                if steps_this_day < 350:
                     break
                 self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
                 steps_this_day = 0
