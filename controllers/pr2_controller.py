@@ -379,11 +379,11 @@ class PR2_qlearn_Agent:
 
     # implementing a system where amount of stocked items is categorized into 4 levels so that for larger sets q table doesnt need to grow exponentially
     def get_discrete_level(self, count):
-        if count <= 3:
+        if count <= 5:
             return 0  # Bad
-        elif count <= 7:
+        elif count <= 14:
             return 1  # OK
-        elif count <= 9:
+        elif count <= 19:
             return 2  # Good
         else:
             return 3  # Stocked (Full)
@@ -413,14 +413,14 @@ class PR2_qlearn_Agent:
         item_name = self.ACTIONS[action_idx]
         props = self.ITEM_PROPERTIES[item_name]
         print(f"   [Step {step_num} | Eps: {self.EPSILON:.4f}] Stocking {item_name} (Type: {props['type']})...")
-        if self.inventory[item_name] < 10:
+        if self.inventory[item_name] < 20:
             self.inventory[item_name] += 1
             new_level = self.inventory[item_name]
-            status = "CRITICAL" if new_level <= 3 else "OK" if new_level <= 7 else "GOOD" if new_level <= 9 else "FULL"
-            print(f"   [RESULT] Level: {new_level}/10 ({status})")
+            status = "CRITICAL" if new_level <= 5 else "OK" if new_level <= 14 else "GOOD" if new_level <= 19 else "FULL"
+            print(f"   [RESULT] Level: {new_level}/20 ({status})")
             return True
         else:
-            print(f"   [FAIL] {item_name} is already at 10/10.")
+            print(f"   [FAIL] {item_name} is already at 20.")
             return False
 
     def calculate_reward(self, old_inv, action_idx, success):
@@ -454,7 +454,7 @@ class PR2_qlearn_Agent:
         distance_penalty = props['dist'] * 0.5
         total_reward = final_stock_reward - distance_penalty
 
-        if not success and old_count != 10:
+        if not success and old_count != 20:
             total_reward -= 5
 
         return total_reward
@@ -487,12 +487,12 @@ class PR2_qlearn_Agent:
             if self.EPSILON > self.MIN_EPSILON:
                 self.EPSILON *= self.DECAY
 
-            if all(value == 10 for value in self.inventory.values()):
+            if all(value == 20 for value in self.inventory.values()):
                 print(f"\n Store fully stocked ")
 
                 self.save_q_table()
 
-                if steps_this_day < 200:
+                if steps_this_day < 300:
                     break
                 self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
                 steps_this_day = 0
