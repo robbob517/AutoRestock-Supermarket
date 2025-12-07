@@ -495,7 +495,7 @@ class PR2_qlearn_Agent:
             if all(value == 10 for value in self.inventory.values()):
                 print(f"\n>>> VICTORY! Store fully stocked (10/10) <<<")
 
-
+                self.save_q_table()
 
                 if steps_this_day < 200:
                     print(f">>> PERFORMANCE GOAL MET! Finished in {steps_this_day} steps. <<<")
