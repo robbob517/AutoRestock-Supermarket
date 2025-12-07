@@ -8,7 +8,7 @@ import random
 
 # Shelf Dimensions
 SHELF_HEIGHT = 2.5
-SHELF_WIDTH = 2
+SHELF_WIDTH = 4
 SHELF_DEPTH = 0.5
 SHELF_SPACING = 0.01
 SHELF_COUNT = 4
@@ -16,7 +16,7 @@ SHELF_THICKNESS = 0.05
 
 # Aisle Dimensions
 ROWS = 10
-COLUMNS = 8
+COLUMNS = 4
 AISLE_WIDTH = 2.5
 
 START_X = -7.25
@@ -93,6 +93,7 @@ def shelf_placement():
             else:
                 shelf = (f'Shelf {{ '
                         f'translation {current_x} {current_y} 0 '
+                        f'rotation 0.5773451 0.577351 0.577351 2.0944 '
                         f'name "shelf_{row}_{col}"'
                         f' }} ')
 

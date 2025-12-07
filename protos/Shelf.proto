@@ -8,7 +8,7 @@ PROTO Shelf [
   field SFRotation rotation 0 0 1 0
   field SFString name "shelf"
   field SFFloat height 2.5
-  field SFFloat width 2
+  field SFFloat width 4
   field SFFloat depth 0.5
   field SFInt32 shelfCount 4
   field SFFloat thickness 0.05
