@@ -7,9 +7,12 @@ import random
 
 
 # Shelf Dimensions
+SHELF_HEIGHT = 2.5
 SHELF_WIDTH = 2
 SHELF_DEPTH = 0.5
 SHELF_SPACING = 0.01
+SHELF_COUNT = 4
+SHELF_THICKNESS = 0.05
 
 # Aisle Dimensions
 ROWS = 10
@@ -47,6 +50,8 @@ PRODUCTS = [
     }
             ]
 
+SHELF_LEVELS = []
+
 supervisor = Supervisor()
 
 shelf_group = supervisor.getFromDef("SHELVES")
@@ -54,6 +59,17 @@ shelf_children = shelf_group.getField("children")
 
 product_group = supervisor.getFromDef("PRODUCTS")
 product_children = product_group.getField("children")
+
+shelf_spacing = (SHELF_HEIGHT - (SHELF_COUNT * SHELF_THICKNESS)) / SHELF_COUNT
+
+def calculate_shelf_levels():
+
+    print(f'Shelf spacing: {shelf_spacing}')
+
+    for i in range(SHELF_COUNT):
+        SHELF_LEVELS.append( SHELF_THICKNESS + i * (shelf_spacing + SHELF_THICKNESS/2) )
+
+    print(f'Shelf Levels: {SHELF_LEVELS}')
 
 def shelf_placement():
 
@@ -90,9 +106,40 @@ def shelf_placement():
 
 def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
 
+    product = random.choice(PRODUCTS)
+    available_space = SHELF_WIDTH - (2 * SHELF_THICKNESS)
 
 
-    return
+    if product["name"] == "CerealBox" or product["name"] == "BiscuitBox":
+        product_w = (product["w"])
+
+    else:
+        product_w = (product["r"] * 2)
+
+    item_spacing = 0.3
+    items_per_row = (int)(available_space // (product_w + item_spacing))
+    for z_level in SHELF_LEVELS:
+            z_level += 0.1
+            for i in range(items_per_row):
+
+
+                y_offset = ( shelf_y - (SHELF_WIDTH/2) - SHELF_THICKNESS + ((i+1)* (product_w + item_spacing) ))
+
+                if east_facing:
+                    prod = (f'{product["name"]} {{ '
+                            f'translation {shelf_x} {y_offset} {z_level} '
+                            f'rotation 0 0 1 3.14159 '
+                            f'name "product_{shelf_row}_{shelf_col}_{i}" '
+                            f' }} ')
+                else:
+                    prod = (f'{product["name"]} {{ '
+                            f'translation {shelf_x} {y_offset} {z_level} '
+                            f'name "product_{shelf_row}_{shelf_col}_{i}" '
+                            f' }} ')
+
+                product_children.importMFNodeFromString(-1, prod)
+
 
 # Main
+calculate_shelf_levels()
 shelf_placement()

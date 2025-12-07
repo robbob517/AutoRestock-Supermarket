@@ -6,7 +6,6 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
 EXTERNPROTO "../protos/Wall.proto"
 IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
-
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/BiscuitBox.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/CerealBox.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/HoneyJar.proto"
@@ -15,8 +14,8 @@ IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R20
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.4866057100421636 0.49205641551105966 -0.7218693558454807 1.880495379049612
-  position 0.318687218288127 17.547871740669187 42.88476905250635
+  orientation -0.20418368914634843 -0.20150905864691568 0.9579682251357929 4.656292066386268
+  position -2.3524924521876107 41.07505807339219 22.005127645489388
 }
 TexturedBackground {
 }
@@ -30,7 +29,7 @@ Robot {
 Pr2 {
   translation 0 -12 0
 }
-DEF SUPERMARKET_ENV Solid {
+DEF SUPERMARKET_ENV Group {
   children [
     DEF FLOOR Floor {
       size 20 30
@@ -74,8 +73,7 @@ DEF SUPERMARKET_ENV Solid {
     DEF SHELVES Solid {
       name "Shelves"
     }
-    DEF PRODUCTS Solid {
-      name "Products"
+    DEF PRODUCTS Group {
     }
   ]
 }
