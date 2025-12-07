@@ -364,27 +364,18 @@ class PR2_qlearn_Agent:
 
         def load_q_table(self):
             if os.path.exists(self.q_table_file):
-                print(">>> BRAIN FOUND: Loading learned Q-Table from file... <<<")
                 with open(self.q_table_file, 'rb') as f:
                     return pickle.load(f)
             else:
-                print(">>> NO BRAIN FOUND: Starting with a fresh Q-Table. <<<")
                 return {}
 
         def save_q_table(self):
-            print(">>> SAVING BRAIN: Writing Q-Table to file... <<<")
+            print("saving q table")
             with open(self.q_table_file, 'wb') as f:
                 pickle.dump(self.q_table, f)
 
 
     def get_discrete_level(self, count):
-        """
-        Maps the raw stock count (0-10) to a specific State Category.
-        0 = Critical (0-3)
-        1 = OK (4-7)
-        2 = Good (8-9)
-        3 = Stocked (10)
-        """
         if count <= 3:
             return 0  # Critical
         elif count <= 7:
@@ -395,9 +386,6 @@ class PR2_qlearn_Agent:
             return 3  # Stocked (Full)
 
     def get_state_tuple(self):
-        """
-        Returns a tuple of discrete levels (0, 1, 2, or 3) for all items.
-        """
         current_levels = []
         for item in self.ACTIONS:
             raw_count = self.inventory[item]
