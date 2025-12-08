@@ -187,5 +187,5 @@ calculate_shelf_levels()
 shelf_placement()
 
 # Checking number of empty slots
-for x, y in empty_slots.items():
-    print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")
+# for x, y in empty_slots.items():
+#     print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")

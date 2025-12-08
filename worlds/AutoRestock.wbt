@@ -6,10 +6,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
 EXTERNPROTO "../protos/Wall.proto"
 IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
-IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/BiscuitBox.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/CerealBox.proto"
-IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/HoneyJar.proto"
-IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/drinks/protos/Can.proto"
 
 WorldInfo {
 }
