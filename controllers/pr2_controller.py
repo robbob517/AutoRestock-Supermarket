@@ -6,6 +6,8 @@ import sys
 import random
 import pickle
 import os
+import json
+import time
 
 TIME_STEP = 32
 
@@ -337,37 +339,43 @@ class PR2_qlearn_Agent:
         self.EPSILON =1.0
         self.MIN_EPSILON =0.05
         self.DECAY =0.999
-
-        self.ITEM_PROPERTIES = {
-            "ICE_CREAM": {"dist": 12.0, "type": "FROZEN", "start": 2},
-            "PIZZA": {"dist": 10.0, "type": "FROZEN", "start": 2},
-            "CHICKEN": {"dist": 11.0, "type": "FROZEN", "start": 1},
-            "PEAS": {"dist": 10.0, "type": "FROZEN", "start": 0},
-            "MILK": {"dist": 5.0, "type": "PRODUCE", "start": 3},
-            "APPLES": {"dist": 4.0, "type": "PRODUCE", "start": 5},
-            "BANANAS": {"dist": 4.0, "type": "PRODUCE", "start": 2},
-            "EGGS": {"dist": 5.0, "type": "PRODUCE", "start": 2},
-            "YOGURT": {"dist": 5.5, "type": "PRODUCE", "start": 3},
-            "BREAD": {"dist": 2.0, "type": "DRY", "start": 4},
-            "CEREAL": {"dist": 3.0, "type": "DRY", "start": 0},
-            "WATER": {"dist": 8.0, "type": "DRY", "start": 4},
-            "CHIPS": {"dist": 2.0, "type": "DRY", "start": 1},
-            "PASTA": {"dist": 3.0, "type": "DRY", "start": 7},
-            "SOAP": {"dist": 9.0, "type": "NON_FOOD", "start": 2}
-        }
-        #dist is distance of robot from shelf that needs item
-        #type is the category of the item
-        #start is how much of the item is already in stock at the start of the stocking process
+        self.CARGO_LOC = (0.0, 0.0)
+        self.ITEM_PROPERTIES = self.load_map_data()
 
         self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
         self.NUM_ACTIONS = len(self.ACTIONS)
-        self.q_table_file ="pr2_q_memory.pkl"
-        self.q_table =self.load_q_table()
+        self.q_table_file = "pr2_q_memory.pkl"
+        self.q_table = self.load_q_table()
 
-        self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
 
-    def heuristic(a, b):
+        self.inventory = {k: 0 for k in self.ACTIONS}
+
+    def heuristic(self, a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def load_map_data(self):
+        file_path = "supermarket_data.json"
+        while not os.path.exists(file_path):
+            time.sleep(2)
+        with open(file_path,"r") as f:
+            raw_data = json.load(f)
+
+        processed_props= {}
+        for name, data in raw_data.items():
+            if data["empty_positions"]:
+                target_xyz = data["empty_positions"][0]
+                target_coords= (target_xyz[0], target_xyz[1])
+            else:
+                target_coords= (0.0, 0.0)
+
+            dist = self.heuristic(self.CARGO_LOC, target_coords)
+            processed_props[name] = {
+                "dist":dist,
+                "type":data["product_type"],
+                "coords":target_coords,
+                "start": 0
+            }
+        return processed_props
 
 
     def load_q_table(self):
