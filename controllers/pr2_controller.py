@@ -327,6 +327,9 @@ def set_initial_position():
     set_gripper(True, True, 0, False)
     set_torso_height(0.2, True)
 
+def heuristic(a, b):
+    return abs(a[0]-b[0]) + abs(a[1]-b[1])
+
 
 class PR2_qlearn_Agent:
     def __init__(self):
