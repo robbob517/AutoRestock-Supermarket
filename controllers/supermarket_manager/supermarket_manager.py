@@ -155,12 +155,12 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
                         prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '
                                 f'translation {shelf_x} {y_offset} {z_level} '
                                 f'rotation 0 0 1 3.14159 '
-                                f'name "product_{shelf_row}_{shelf_col}_{shelf_num}_{index}" '
+                                f'name "{product}_{shelf_row}_{shelf_col}_{shelf_num}_{index}" '
                                 f' }} ')
                     else:
                         prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '
                                 f'translation {shelf_x} {y_offset} {z_level} '
-                                f'name "product_{shelf_row}_{shelf_col}_{shelf_num}_{index}" '
+                                f'name "{product}_{shelf_row}_{shelf_col}_{shelf_num}_{index}" '
                                 f' }} ')
 
                     product_children.importMFNodeFromString(-1, prod)
