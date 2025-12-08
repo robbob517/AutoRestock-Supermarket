@@ -107,17 +107,15 @@ def shelf_placement():
             current_y = START_Y + (col * (SHELF_WIDTH + SHELF_SPACING))
 
             if east_facing:
-                shelf = (f'Shelf {{ '
-                        f'translation {current_x} {current_y} 0 '
-                        f'rotation -0.5773451 0.577351 0.577351 -2.0944 '
-                        f'name "shelf_{row}_{col}"'
-                        f' }} ')
+                rotation = "-0.577 0.577 0.577 -2.09"
             else:
-                shelf = (f'Shelf {{ '
-                        f'translation {current_x} {current_y} 0 '
-                        f'rotation 0.5773451 0.577351 0.577351 2.0944 '
-                        f'name "shelf_{row}_{col}"'
-                        f' }} ')
+                rotation = "0.577 0.577 0.577 2.09"
+
+            shelf = (f'Shelf {{ '
+                    f'translation {current_x} {current_y} 0 '
+                    f'rotation {rotation} '
+                    f'name "shelf_{row}_{col}"'
+                    f' }} ')
 
             shelf_children.importMFNodeFromString(-1, shelf)
 
@@ -155,16 +153,15 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
 
                 if random.random() > (1 - fullness):  # Likelihood of placing product on shelf
                     if east_facing:
-                        prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '    # Use placeholder item as product model
-                                f'translation {shelf_x} {y_offset} {z_level} '
-                                f'rotation 0 0 1 3.14159 '
-                                f'name "{product}_{shelf_row}_{shelf_col}_{shelf_num}_{item_index}" '
-                                f' }} ')
+                        rotation = "0 0 1 3.14159"
                     else:
-                        prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '
-                                f'translation {shelf_x} {y_offset} {z_level} '
-                                f'name "{product}_{shelf_row}_{shelf_col}_{shelf_num}_{item_index}" '
-                                f' }} ')
+                        rotation = "0 0 1 0"
+
+                    prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '    # Use placeholder item as product model
+                            f'translation {shelf_x} {y_offset} {z_level} '
+                            f'rotation {rotation} '
+                            f'name "{product}_{shelf_row}_{shelf_col}_{shelf_num}_{item_index}" '
+                            f' }} ')
 
                     product_children.importMFNodeFromString(-1, prod)
 
@@ -182,6 +179,8 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
         # Remove product entry so there are no repeats
         del PRODUCTS[product]
 
+
+
 # Main
 calculate_shelf_levels()
 shelf_placement()
@@ -189,3 +188,6 @@ shelf_placement()
 # Checking number of empty slots
 # for x, y in empty_slots.items():
 #     print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")
+
+emitter = supervisor.getDevice("emitter")
+receiver = supervisor.getDevice("receiver")

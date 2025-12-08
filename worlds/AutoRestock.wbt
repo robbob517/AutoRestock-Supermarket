@@ -12,21 +12,39 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation 0.2840692751803396 0.2756725185088054 -0.9183187406546427 1.6857575019899793
-  position -1.073957656380335 44.24683506887908 31.683349553663174
+  orientation -0.2664311042786268 -0.26558378813398587 0.9265418059393076 4.6329911086843705
+  position -0.7546153338459975 46.644824677179265 31.26282742784137
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
 Robot {
+  children [
+    Receiver {
+      channel 2
+      byteSize 256
+    }
+    Emitter {
+      channel 1
+      byteSize 256
+    }
+  ]
   name "Supermarket Manager"
   controller "supermarket_manager"
   supervisor TRUE
 }
 Pr2 {
-  translation 0 -12 0
+  translation 2 -12 0
   rotation 0 0 1 1.5708
+  name "pr2_1"
+  controller "<extern>"
+}
+Pr2 {
+  translation -2 -12 0
+  rotation 0 0 1 1.5708
+  name "pr2_2"
+  controller "<extern>"
 }
 DEF SUPERMARKET_ENV Group {
   children [
