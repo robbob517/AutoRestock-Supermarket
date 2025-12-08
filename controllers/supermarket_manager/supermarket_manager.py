@@ -4,6 +4,7 @@
 #  from controller import Robot, Motor, DistanceSensor
 from controller import Supervisor
 import random
+import json
 
 # Shelf Dimensions
 SHELF_HEIGHT = 2.5
