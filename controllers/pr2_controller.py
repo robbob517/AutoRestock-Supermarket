@@ -327,8 +327,6 @@ def set_initial_position():
     set_gripper(True, True, 0, False)
     set_torso_height(0.2, True)
 
-def heuristic(a, b):
-    return abs(a[0]-b[0]) + abs(a[1]-b[1])
 
 
 class PR2_qlearn_Agent:
@@ -367,6 +365,9 @@ class PR2_qlearn_Agent:
         self.q_table =self.load_q_table()
 
         self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
+
+    def heuristic(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 
     def load_q_table(self):
