@@ -479,11 +479,18 @@ class PR2_qlearn_Agent:
         new_q = old_q + self.ALPHA * (r + self.GAMMA * next_max - old_q)
         self.q_table[s][a] = new_q
 
+    def save_restocking_queue(self, action_log):
+        filename = "optimal_restocking_path.json"
+        print(f"Saving Path: Writing {len(action_log)} steeps to {filename}")
+        with open(filename, 'w') as f:
+            json.dump(action_log, f, indent=4)
+
     def train_text_mode(self):
         # used to check if the q table is working correctly will be removed when the robot works on its own
         print(f"Starting Q-Learning ")
         episode = 0
         steps_this_day = 0
+        current_day_log = []
         while robot.step(TIME_STEP) != -1:
             episode+=1
             steps_this_day+= 1
@@ -492,6 +499,10 @@ class PR2_qlearn_Agent:
             old_inv = self.inventory.copy()
             action_idx = self.choose_action(state)
             success =self.execute_action_text_mode(action_idx, steps_this_day)
+            if success:
+                item_name = self.ACTIONS[action_idx]
+                coords = self.ITEM_PROPERTIES[item_name]["coords"]
+                current_day_log.append([list(coords), item_name])
 
             reward = self.calculate_reward(old_inv, action_idx, success)
             next_state = self.get_state_tuple()
@@ -506,9 +517,11 @@ class PR2_qlearn_Agent:
                 self.save_q_table()
 
                 if steps_this_day < 350:
+                    self.save_restocking_queue(current_day_log)
                     break
-                self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
+                self.inventory = {k: 0 for k in self.ACTIONS}
                 steps_this_day = 0
+                current_day_log = []
 
 if __name__ == "__main__":
     initialize_devices()
