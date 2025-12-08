@@ -141,7 +141,7 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
         shelf_num = 0
 
         if empty_slots.get((shelf_row, shelf_col)) is None: # Initialise dict for current shelf
-            empty_slots[(shelf_row, shelf_col)] = {"product_type" : { "name" : product, "type" : PRODUCTS[product]["type"] }, "empty_positions" : []}
+            empty_slots[product] = {"product_type" : PRODUCTS[product]["type"], "empty_positions" : [], "shelf_pos" : (shelf_row, shelf_col)}
 
         for z_level in SHELF_LEVELS:
             item_index = 0
@@ -170,10 +170,10 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
 
                 else:   # Add empty item slot to dictionary
                     # Dictionary Structure
-                    # Shelf (row, col) : {product_type : { "name" : "", "type" : "" }, empty_positions : [(x,y,z)]}
+                    # Product name : {product_type : "type", empty_positions : [(x,y,z)], shelf_position : (row, col)}
 
                     product_position = (shelf_x, y_offset, z_level)
-                    empty_slots[(shelf_row, shelf_col)]["empty_positions"].append(product_position)
+                    empty_slots[product]["empty_positions"].append(product_position)
 
                 item_index += 1
 
@@ -188,4 +188,4 @@ shelf_placement()
 
 # Checking number of empty slots
 for x, y in empty_slots.items():
-    print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}")
+    print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")
