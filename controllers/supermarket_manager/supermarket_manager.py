@@ -5,7 +5,6 @@
 from controller import Supervisor
 import random
 
-
 # Shelf Dimensions
 SHELF_HEIGHT = 2.5
 SHELF_WIDTH = 4
@@ -49,6 +48,8 @@ PRODUCTS = [
         "r": 0.03175
     }
             ]
+
+PRODUCT_LOCATIONS = []
 
 SHELF_LEVELS = []
 
@@ -106,7 +107,7 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
     product = random.choice(PRODUCTS)
     available_space = SHELF_WIDTH - (2 * SHELF_THICKNESS)
     item_spacing = 0.3
-    fullness = 0.5 # Chance of product being placed
+    fullness = 0.8 # Chance of product being placed
 
 
     if product["name"] == "CerealBox" or product["name"] == "BiscuitBox":
@@ -116,26 +117,31 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
         product_w = (product["r"] * 2)
 
     items_per_row = (int)(available_space // (product_w + item_spacing))
+    shelf_num = 0
     for z_level in SHELF_LEVELS:
-            z_level += 0.1
-            for i in range(items_per_row):
+        index = 0
+        shelf_num %= SHELF_COUNT
+        z_level += 0.1
+        for i in range(items_per_row):
 
-                if random.random() > fullness:
-                    y_offset = ( shelf_y - (SHELF_WIDTH/2) - SHELF_THICKNESS + ((i+1)* (product_w + item_spacing) ))
+            if random.random() > fullness:
+                y_offset = ( shelf_y - (SHELF_WIDTH/2) - SHELF_THICKNESS + ((i+1)* (product_w + item_spacing) ))
 
-                    if east_facing:
-                        prod = (f'{product["name"]} {{ '
-                                f'translation {shelf_x} {y_offset} {z_level} '
-                                f'rotation 0 0 1 3.14159 '
-                                f'name "product_{shelf_row}_{shelf_col}_{i}" '
-                                f' }} ')
-                    else:
-                        prod = (f'{product["name"]} {{ '
-                                f'translation {shelf_x} {y_offset} {z_level} '
-                                f'name "product_{shelf_row}_{shelf_col}_{i}" '
-                                f' }} ')
+                if east_facing:
+                    prod = (f'{product["name"]} {{ '
+                            f'translation {shelf_x} {y_offset} {z_level} '
+                            f'rotation 0 0 1 3.14159 '
+                            f'name "product_{shelf_row}_{shelf_col}_{shelf_num}_{index}" '
+                            f' }} ')
+                else:
+                    prod = (f'{product["name"]} {{ '
+                            f'translation {shelf_x} {y_offset} {z_level} '
+                            f'name "product_{shelf_row}_{shelf_col}_{shelf_num}_{index}" '
+                            f' }} ')
 
-                    product_children.importMFNodeFromString(-1, prod)
+                index += 1
+                product_children.importMFNodeFromString(-1, prod)
+        shelf_num += 1
 
 
 # Main
