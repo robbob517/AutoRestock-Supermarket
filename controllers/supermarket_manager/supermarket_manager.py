@@ -1,4 +1,4 @@
-"""shelf_manager controller."""
+"""supermarket_manager controller."""
 
 # You may need to import some classes of the controller module. Ex:
 #  from controller import Robot, Motor, DistanceSensor
@@ -64,12 +64,8 @@ shelf_spacing = (SHELF_HEIGHT - (SHELF_COUNT * SHELF_THICKNESS)) / SHELF_COUNT
 
 def calculate_shelf_levels():
 
-    print(f'Shelf spacing: {shelf_spacing}')
-
     for i in range(SHELF_COUNT):
         SHELF_LEVELS.append( SHELF_THICKNESS + i * (shelf_spacing + SHELF_THICKNESS/2) )
-
-    print(f'Shelf Levels: {SHELF_LEVELS}')
 
 def shelf_placement():
 

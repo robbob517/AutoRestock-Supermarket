@@ -14,16 +14,16 @@ IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R20
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.20418368914634843 -0.20150905864691568 0.9579682251357929 4.656292066386268
-  position -2.3524924521876107 41.07505807339219 22.005127645489388
+  orientation 0.3079671018996471 0.3110622745751696 -0.8991087395213407 1.6669987210022517
+  position -2.300907927470774 42.2140414964673 32.698250462968524
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
 Robot {
-  name "Shelf Manager"
-  controller "shelf_manager"
+  name "Supermarket Manager"
+  controller "supermarket_manager"
   supervisor TRUE
 }
 Pr2 {
