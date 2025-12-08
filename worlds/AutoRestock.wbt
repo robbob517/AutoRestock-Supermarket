@@ -6,16 +6,14 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
 EXTERNPROTO "../protos/Wall.proto"
 IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
-IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/BiscuitBox.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/CerealBox.proto"
-IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/HoneyJar.proto"
-IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/drinks/protos/Can.proto"
 
 WorldInfo {
+  basicTimeStep 16
 }
 Viewpoint {
-  orientation 0.3079671018996471 0.3110622745751696 -0.8991087395213407 1.6669987210022517
-  position -2.300907927470774 42.2140414964673 32.698250462968524
+  orientation 0.2840692751803396 0.2756725185088054 -0.9183187406546427 1.6857575019899793
+  position -1.073957656380335 44.24683506887908 31.683349553663174
 }
 TexturedBackground {
 }
@@ -28,6 +26,7 @@ Robot {
 }
 Pr2 {
   translation 0 -12 0
+  rotation 0 0 1 1.5708
 }
 DEF SUPERMARKET_ENV Group {
   children [
