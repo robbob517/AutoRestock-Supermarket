@@ -21,7 +21,7 @@ AISLE_WIDTH = 2.5
 START_X = -7.25
 START_Y = -3
 
-PRODUCTS = [
+PLACEHOLDER_PRODUCTS = [
     {
         "name": "BiscuitBox",
         "w": 0.24,
@@ -49,9 +49,9 @@ PRODUCTS = [
     }
             ]
 
-PRODUCT_LOCATIONS = []
-
 SHELF_LEVELS = []
+
+empty_slots = {}
 
 supervisor = Supervisor()
 
@@ -100,11 +100,11 @@ def shelf_placement():
 
         east_facing = False
 
-    print("Shelves placed")
+    print("Shelves placed and products placed")
 
 def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
 
-    product = random.choice(PRODUCTS)
+    product = random.choice(PLACEHOLDER_PRODUCTS)
     available_space = SHELF_WIDTH - (2 * SHELF_THICKNESS)
     item_spacing = 0.3
     fullness = 0.8 # Chance of product being placed
@@ -116,17 +116,20 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
     else:
         product_w = (product["r"] * 2)
 
-    items_per_row = (int)(available_space // (product_w + item_spacing))
+    items_per_row = 5
     shelf_num = 0
+
+    if empty_slots.get((shelf_row, shelf_col)) is None:
+        empty_slots[(shelf_row, shelf_col)] = {"product_type" : product["name"], "empty_positions" : []}
+
     for z_level in SHELF_LEVELS:
         index = 0
         shelf_num %= SHELF_COUNT
         z_level += 0.1
         for i in range(items_per_row):
 
-            if random.random() > fullness:
-                y_offset = ( shelf_y - (SHELF_WIDTH/2) - SHELF_THICKNESS + ((i+1)* (product_w + item_spacing) ))
-
+            y_offset = (shelf_y - (SHELF_WIDTH / 2) - SHELF_THICKNESS + ((i + 1) * (product_w + item_spacing)))
+            if random.random() > fullness:  # Add item to shelf
                 if east_facing:
                     prod = (f'{product["name"]} {{ '
                             f'translation {shelf_x} {y_offset} {z_level} '
@@ -139,11 +142,23 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
                             f'name "product_{shelf_row}_{shelf_col}_{shelf_num}_{index}" '
                             f' }} ')
 
-                index += 1
                 product_children.importMFNodeFromString(-1, prod)
-        shelf_num += 1
 
+            else:   # Add empty item slot to dictionary
+                # Empty  (row, col) : {product_type : "", empty_slots : [(x,y,z)]}
+
+                product_position = (shelf_x, y_offset, z_level)
+                empty_slots[(shelf_row, shelf_col)]["empty_positions"].append(product_position)
+
+            index += 1
+
+
+        shelf_num += 1
 
 # Main
 calculate_shelf_levels()
 shelf_placement()
+
+# Checking number of empty slots
+# for x, y in empty_slots.items():
+#     print(f"Shelf: {x}, Empty Slots: {len(y["empty_positions"])}")
