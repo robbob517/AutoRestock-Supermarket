@@ -22,7 +22,7 @@ num_particles = 200
 
 # Odometry
 prev_wheels_angle = np.zeros(8)
-delta_trans, delta_rot, x, y, theta = 0.0, 0.0, 0.0, 0.0, 0.0
+delta_trans, delta_rot, x, y, theta = 0.0, 0.0, -3.0, -12.0, 0.0
 total_distance = 0
 
 # Lidar
@@ -73,12 +73,12 @@ helper.initialize_devices()
 helper.enable_devices()
 helper.set_initial_position()
 
-start = (0, 0)
+start = (-3, -12)
 goal = None
 path_index = 0
 current_orientation = 'up'
 target_orientation = None
-goal_commands = [(3, 0), (-4.2, 1), (0, 4), (-2, -4.2), (4, 4)]#, (-1, 0), (4.2, -3), (-4, 2), (1, 1), (-3, -4)]
+goal_commands = [(0.25, 10), (-4.2, 1), (0, 4), (-2, -4.2), (4, 4)]#, (-1, 0), (4.2, -3), (-4, 2), (1, 1), (-3, -4)]
 command_index = 0
 
 particles = particle_filtering.initialize_particle(test_map.og, num_particles, (0, 0, 0))
@@ -109,21 +109,34 @@ while helper.robot.step(TIME_STEP) != -1:
         # Obtain move instructions for the robot  according to path
         instructions = a_star_search.move_instructions(world_path)
         #print(instructions)
+        '''
+        lidar = helper.base_laser.getRangeImage()
+        if lidar[len(lidar) // 2] <= 0.3:
+            helper.set_wheels_speed(0)
+
+            delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x, y, theta,
+                                                                                            prev_wheels_angle)
+            start = [x, y]
+        '''
+
 
     # Update odometry
     delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x,y,theta,prev_wheels_angle)
+    print("x: ", x, "y: ", y, "theta: ", theta)
 
     # Particle Filter
+    '''
     particles = particle_filtering.motion_update(particles, odometry.calc_odometry(x,y,theta,prev_wheels_angle), noise_std=[0.01, 0.01, 0.005])
     particles = particle_filtering.cal_particle_weight(particles, test_map.og)
     particles = particle_filtering.resample(particles)
     est_x, est_y, est_theta = particle_filtering.estimate_pose(particles)
-    print("x: ", est_x, "y: ", est_y, "theta: ", est_theta)
+    #print("x: ", est_x, "y: ", est_y, "theta: ", est_theta)
     #print([particle["weight"] for particle in particles])
     #straight, left, right = particle_filtering.lidar_readings()
     #print("Straight: ", straight, "Left: ", left, "Right: ", right)
     #print("x: ", x, ", y: ", y, ", theta: ", theta)
-
+    '''
+    print("Working")
     # Main algorithm for robot movement
     if path_index >= len(instructions):
         helper.set_wheels_speed(0)
