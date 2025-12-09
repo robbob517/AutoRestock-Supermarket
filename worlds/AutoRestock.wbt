@@ -14,8 +14,8 @@ IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R20
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.3079671018996471 0.3110622745751696 -0.8991087395213407 1.6669987210022517
-  position -2.300907927470774 42.2140414964673 32.698250462968524
+  orientation 0.6291504369093582 -0.020203825202880287 -0.7770209348427721 3.1914870423086823
+  position 14.753961431572169 0.4304958739934186 52.2060993867486
 }
 TexturedBackground {
 }
@@ -27,7 +27,8 @@ Robot {
   supervisor TRUE
 }
 Pr2 {
-  translation 0 -12 0
+  translation -3 -12 0
+  controller "path_planner"
 }
 DEF SUPERMARKET_ENV Group {
   children [
