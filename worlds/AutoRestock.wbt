@@ -12,8 +12,8 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation 0.2840692751803396 0.2756725185088054 -0.9183187406546427 1.6857575019899793
-  position -1.073957656380335 44.24683506887908 31.683349553663174
+  orientation 0.6291504369093582 -0.020203825202880287 -0.7770209348427721 3.1914870423086823
+  position 14.753961431572169 0.4304958739934186 52.2060993867486
 }
 TexturedBackground {
 }
@@ -25,8 +25,8 @@ Robot {
   supervisor TRUE
 }
 Pr2 {
-  translation 0 -12 0
-  rotation 0 0 1 1.5708
+  translation -3 -12 0
+  controller "path_planner"
 }
 DEF SUPERMARKET_ENV Group {
   children [
