@@ -4,7 +4,7 @@ from controller import Supervisor
 import math
 import sys
 
-TIME_STEP = 32
+TIME_STEP = 16
 
 # PR2 constants
 MAX_WHEEL_SPEED = 3.0
