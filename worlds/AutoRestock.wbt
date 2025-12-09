@@ -34,14 +34,14 @@ Robot {
   controller "supermarket_manager"
   supervisor TRUE
 }
-Pr2 {
-  translation 2 -12 0
+DEF PR2_1 Pr2 {
+  translation 2 -12 0 # Shift left
   rotation 0 0 1 1.5708
   name "pr2_1"
   controller "<extern>"
 }
-Pr2 {
-  translation -2 -12 0
+DEF PR2_2 Pr2 {
+  translation -2 -12 0 # Shift right
   rotation 0 0 1 1.5708
   name "pr2_2"
   controller "<extern>"

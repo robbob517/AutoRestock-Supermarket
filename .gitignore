@@ -2,3 +2,5 @@
 worlds/.AutoRestock.wbproj
 worlds/.AutoRestock.jpg
 protos/icons/Pr2.png
+controllers/__pycache__
+controllers/path_planner/__pycache__

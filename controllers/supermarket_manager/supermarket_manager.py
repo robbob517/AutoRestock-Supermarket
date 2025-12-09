@@ -4,6 +4,7 @@
 #  from controller import Robot, Motor, DistanceSensor
 from controller import Supervisor
 import random
+import json
 
 # Shelf Dimensions
 SHELF_HEIGHT = 2.5
@@ -20,6 +21,9 @@ AISLE_WIDTH = 2.5
 
 START_X = -7.25
 START_Y = -3
+
+ITEMS_PER_ROW = 5
+ITEMS_PER_SHELF = ITEMS_PER_ROW * SHELF_COUNT
 
 PLACEHOLDER_PRODUCT = {
         "name": "CerealBox",
@@ -76,10 +80,11 @@ PRODUCTS = {
 
 SHELF_LEVELS = []
 
-empty_slots = {}
+shelves = {}
 
 supervisor = Supervisor()
-timestep = supervisor.getBasicTimeStep()
+
+TIMESTEP = int(supervisor.getBasicTimeStep())
 
 shelf_group = supervisor.getFromDef("SHELVES")
 shelf_children = shelf_group.getField("children")
@@ -87,9 +92,8 @@ shelf_children = shelf_group.getField("children")
 product_group = supervisor.getFromDef("PRODUCTS")
 product_children = product_group.getField("children")
 
-shelf_spacing = (SHELF_HEIGHT - (SHELF_COUNT * SHELF_THICKNESS)) / SHELF_COUNT
-
 def calculate_shelf_levels():
+    shelf_spacing = (SHELF_HEIGHT - (SHELF_COUNT * SHELF_THICKNESS)) / SHELF_COUNT
 
     for i in range(SHELF_COUNT):
         SHELF_LEVELS.append( SHELF_THICKNESS + i * (shelf_spacing + SHELF_THICKNESS/2) )
@@ -139,19 +143,21 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
         product_w = PLACEHOLDER_PRODUCT["w"] # Width of product
 
-        items_per_row = 5
-
         shelf_num = 0
 
-        if product["name"] not in empty_slots: # Initialise dict for current shelf
-            empty_slots[product["name"]] = {"product_type" : PRODUCTS[shelf_pos]["type"], "empty_positions" : [], "shelf_pos" : (shelf_row, shelf_col)}
+        if product["name"] not in shelves: # Initialise dict for current shelf
+            shelves[product["name"]] = {"product_type" : PRODUCTS[shelf_pos]["type"],
+                                            "empty_positions" : [],
+                                            "shelf_grid" : (shelf_row, shelf_col),
+                                            "shelf_pos" : (shelf_x, shelf_y)
+                                        }
 
         for z_level in SHELF_LEVELS:
             item_index = 0
             shelf_num %= SHELF_COUNT
             z_level += 0.1 # Raise product slightly to avoid clipping with shelf when loading
 
-            for i in range(items_per_row):
+            for i in range(ITEMS_PER_ROW):
 
                 y_offset = (shelf_y - (SHELF_WIDTH / 2) - SHELF_THICKNESS + ((i + 1) * (product_w + item_spacing)))
 
@@ -171,19 +177,44 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
                 else:   # Add empty item slot to dictionary
                     # Dictionary Structure
-                    # Product name : {product_type : "type", empty_positions : [(x,y,z)], shelf_position : (row, col)}
+                    # Product name : {product_type : "type", empty_positions : [(x,y,z)], shelf_grid : (row, col), shelf_pos : (shelf_x, shelf_y)}
 
                     product_position = (shelf_x, y_offset, z_level)
-                    empty_slots[product["name"]]["empty_positions"].append(product_position)
+                    shelves[product["name"]]["empty_positions"].append(product_position)
 
                 item_index += 1
             shelf_num += 1
 
+# Main Loop
+def run():
+    calculate_shelf_levels()
+    shelf_placement()
 
-# Main
-calculate_shelf_levels()
-shelf_placement()
+    emitter = supervisor.getEmitter("emitter")
+    receiver = supervisor.getReceiver("receiver")
+    receiver.enable(TIMESTEP)
 
-# Checking number of empty slots
-# for x, y in empty_slots.items():
-#     print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")
+    current_inventory = {product["name"]: (ITEMS_PER_SHELF - len(shelves[product["name"]]["empty_positions"])) for
+                         product in PRODUCTS.values()}
+
+    while supervisor.step(16) != 1:
+        while receiver.getQueueLength() > 0:
+            message = receiver.getData().decode('utf-8')
+            data = json.loads(message)
+            receiver.nextPacket()
+
+            if data["type"] == "RESTOCK":
+                item = data["item"]
+                current_inventory[item] += 1
+                print(f"Robot restocked item {item}. New stock count {current_inventory[item]}")
+
+        total_stock = sum(current_inventory.values())
+        global_reward = total_stock
+
+        state_msg = {
+            "inventory" : current_inventory,
+            "reward" : global_reward,
+        }
+        emitter.send(json.dumps(state_msg)).encode("utf-8")
+
+run()
