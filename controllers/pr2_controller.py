@@ -334,15 +334,15 @@ def set_initial_position():
 class PR2_qlearn_Agent:
     def __init__(self):
 
-        self.ALPHA =0.1
-        self.GAMMA =0.9
-        self.EPSILON =1.0
-        self.MIN_EPSILON =0.05
+        self.Alpha =0.1
+        self.Gamma =0.9
+        self.Epsilon =1.0
+        self.MIN_Epsilon =0.05
         self.DECAY =0.999
-        self.CARGO_LOC = (0.0, 0.0)
-        self.ITEM_PROPERTIES = self.load_map_data()
+        self.CARGO_location = (0.0, 0.0)
+        self.ITEM_properties = self.load_map_data()
 
-        self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
+        self.ACTIONS = list(self.ITEM_properties.keys())
         self.NUM_ACTIONS = len(self.ACTIONS)
         self.q_table_file = "pr2_q_memory.pkl"
         self.q_table = self.load_q_table()
@@ -368,7 +368,7 @@ class PR2_qlearn_Agent:
             else:
                 target_coords= (0.0, 0.0)
 
-            dist = self.heuristic(self.CARGO_LOC, target_coords)
+            dist = self.heuristic(self.CARGO_location, target_coords)
             processed_props[name] = {
                 "dist":dist,
                 "type":data["product_type"],
@@ -378,14 +378,14 @@ class PR2_qlearn_Agent:
         return processed_props
 
 
-    def load_q_table(self):
+    def load_q_table(self): # if q table already exists use info from q table
             if os.path.exists(self.q_table_file):
                 with open(self.q_table_file,'rb') as f:
                     return pickle.load(f)
             else:
                 return {}
 
-    def save_q_table(self):
+    def save_q_table(self): # save existing q table
             print("saving q table")
             with open(self.q_table_file,'wb') as f:
                 pickle.dump(self.q_table,f)
@@ -401,7 +401,7 @@ class PR2_qlearn_Agent:
         else:
             return 3 #Stocked (Full)
 
-    def get_state_tuple(self):
+    def get_state_tuple(self): # gets category of item from the number of items in stock
         current_levels = []
         for item in self.ACTIONS:
             raw_count =self.inventory[item]
@@ -414,8 +414,8 @@ class PR2_qlearn_Agent:
             self.q_table[state] = np.zeros(self.NUM_ACTIONS)
         return self.q_table[state]
 
-    def choose_action(self, state):
-        if random.uniform(0, 1) < self.EPSILON:
+    def choose_action(self, state): # decides on the action
+        if random.uniform(0, 1) < self.Epsilon:
             return random.randint(0,self.NUM_ACTIONS - 1)
         else:
             q_vals = self.get_q_values(state)
@@ -424,8 +424,8 @@ class PR2_qlearn_Agent:
     def execute_action_text_mode(self, action_idx, step_num):
         # text mode to check if q table is running well ( not really needed for actual robot)
         item_name= self.ACTIONS[action_idx]
-        props= self.ITEM_PROPERTIES[item_name]
-        print(f"   [Step {step_num} | Eps: {self.EPSILON:.4f}] Stocking {item_name} (Type: {props['type']})...")
+        props= self.ITEM_properties[item_name]
+        print(f"   [Step {step_num} | Eps: {self.Epsilon:.4f}] Stocking {item_name} (Type: {props['type']})...")
         if self.inventory[item_name] <20:
             self.inventory[item_name]+= 1
             new_level = self.inventory[item_name]
@@ -438,7 +438,7 @@ class PR2_qlearn_Agent:
 
     def calculate_reward(self, old_inv, action_idx, success):
         item_name = self.ACTIONS[action_idx]
-        props = self.ITEM_PROPERTIES[item_name]
+        props = self.ITEM_properties[item_name]
         old_count = old_inv[item_name]
         old_cat = self.get_discrete_level(old_count)
 
@@ -476,7 +476,7 @@ class PR2_qlearn_Agent:
         q_values = self.get_q_values(s)
         old_q = q_values[a]
         next_max = np.max(self.get_q_values(s_prime))
-        new_q = old_q + self.ALPHA * (r + self.GAMMA * next_max - old_q)
+        new_q = old_q + self.Alpha * (r + self.Gamma * next_max - old_q)
         self.q_table[s][a] = new_q
 
     def save_restocking_queue(self, action_log):
@@ -501,15 +501,15 @@ class PR2_qlearn_Agent:
             success =self.execute_action_text_mode(action_idx, steps_this_day)
             if success:
                 item_name = self.ACTIONS[action_idx]
-                coords = self.ITEM_PROPERTIES[item_name]["coords"]
+                coords = self.ITEM_properties[item_name]["coords"]
                 current_day_log.append([list(coords), item_name])
 
             reward = self.calculate_reward(old_inv, action_idx, success)
             next_state = self.get_state_tuple()
             self.update_q_table(state,action_idx,reward,next_state)
 
-            if self.EPSILON > self.MIN_EPSILON:
-                self.EPSILON *= self.DECAY
+            if self.Epsilon > self.MIN_Epsilon:
+                self.Epsilon *= self.DECAY
 
             if all(value == 20 for value in self.inventory.values()):
                 print(f"\n Store fully stocked")
