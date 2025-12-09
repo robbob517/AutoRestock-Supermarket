@@ -217,4 +217,15 @@ def run():
         }
         emitter.send(json.dumps(state_msg)).encode("utf-8")
 
+output_file = "supermarket_data.json"
+print(f"Exporting {len(empty_slots)} products to {output_file}...")
+with open(output_file, "w") as f:
+    json.dump(empty_slots, f, indent=4)
+
+print("Export complete.")
+
 run()
+
+# Checking number of empty slots
+# for x, y in empty_slots.items():
+#     print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")
