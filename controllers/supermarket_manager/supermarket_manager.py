@@ -29,49 +29,49 @@ PLACEHOLDER_PRODUCT = {
     }
 
 PRODUCTS = {
-        "BREAD" : {"type" : "DRY"},
-        "CEREAL" : {"type" : "DRY"},
-        "WATER" : {"type" : "DRY"},
-        "CHIPS" : {"type" : "DRY"},
-        "PASTA" : {"type" : "DRY"},
-        "KIDNEY BEANS" : {"type" : "DRY"},
-        "CHICKPEAS" : {"type" : "DRY"},
-        "BAKED BEANS" : {"type" : "DRY"},
-        "SOY BEANS" : {"type" : "DRY"},
-        "BLACK BEANS" : {"type" : "DRY"},
+     (0, 0) : {"name" : "BREAD","type" : "DRY"},
+     (0, 1) : {"name" : "CEREAL", "type" : "DRY"},
+     (0, 2) : {"name" : "WATER","type" : "DRY"},
+     (0, 3) : {"name" : "CHIPS","type" : "DRY"},
+     (1, 0) : {"name" : "PASTA","type" : "DRY"},
+     (1, 1) : {"name" : "KIDNEY BEANS","type" : "DRY"},
+     (1, 2) : {"name" : "CHICKPEAS","type" : "DRY"},
+     (1, 3) : {"name" : "BAKED BEANS","type" : "DRY"},
+     (2, 0) : {"name" : "SOY BEANS","type" : "DRY"},
+     (2, 1) : {"name" : "BLACK BEANS","type" : "DRY"},
 
-        "MILK" : {"type" : "PRODUCE"},
-        "APPLES" : {"type" : "PRODUCE"},
-        "BANANAS" : {"type" : "PRODUCE"},
-        "EGGS" : {"type" : "PRODUCE"},
-        "YOGURT" : {"type" : "PRODUCE"},
-        "KIWI" : {"type" : "PRODUCE"},
-        "STRAWBERRY" : {"type" : "PRODUCE"},
-        "MANGO" : {"type" : "PRODUCE"},
-        "BLUEBERRY" : {"type" : "PRODUCE"},
-        "CREAM" : {"type" : "PRODUCE"},
+     (2, 2) : {"name" : "MILK","type" : "PRODUCE"},
+     (2, 3) : {"name" : "APPLES","type" : "PRODUCE"},
+     (3, 0) : {"name" : "BANANAS","type" : "PRODUCE"},
+     (3, 1) : {"name" : "EGGS","type" : "PRODUCE"},
+     (3, 2) : {"name" : "YOGURT","type" : "PRODUCE"},
+     (3, 3) : {"name" : "KIWI","type" : "PRODUCE"},
+     (4, 0) : {"name" : "STRAWBERRY","type" : "PRODUCE"},
+     (4, 1) : {"name" : "MANGO","type" : "PRODUCE"},
+     (4, 2) : {"name" : "BLUEBERRY","type" : "PRODUCE"},
+     (4, 3) : {"name" : "CREAM","type" : "PRODUCE"},
 
-        "ICE_CREAM" : {"type" : "FROZEN"},
-        "PIZZA" : {"type" : "FROZEN"},
-        "CHICKEN" : {"type" : "FROZEN"},
-        "PEAS" : {"type" : "FROZEN"},
-        "ICE LOLLY" : {"type" : "FROZEN"},
-        "HASH BROWN" : {"type" : "FROZEN"},
-        "TURKEY" : {"type" : "FROZEN"},
-        "BURGER" : {"type" : "FROZEN"},
-        "MIXED FRUIT" : {"type" : "FROZEN"},
+     (5, 0) : {"name" : "ICE_CREAM","type" : "FROZEN"},
+     (5, 1) : {"name" : "PIZZA","type" : "FROZEN"},
+     (5, 2) : {"name" :  "CHICKEN","type" : "FROZEN"},
+     (5, 3) : {"name" : "PEAS","type" : "FROZEN"},
+     (6, 0) : {"name" : "ICE LOLLY","type" : "FROZEN"},
+     (6, 1) : {"name" : "HASH BROWN","type" : "FROZEN"},
+     (6, 2) : {"name" :  "TURKEY","type" : "FROZEN"},
+     (6, 3) : {"name" : "BURGER","type" : "FROZEN"},
+     (7, 0) : {"name" : "MIXED FRUIT","type" : "FROZEN"},
 
-        "BATH TOWEL" : {"type" : "NON_FOOD"},
-        "FACE TOWEL" : {"type" : "NON_FOOD"},
-        "HAIR TOWEL" : {"type" : "NON_FOOD"},
-        "HAND TOWEL" : {"type" : "NON_FOOD"},
-        "SHAMPOO" : {"type" : "NON_FOOD"},
-        "CONDITIONER" : {"type" : "NON_FOOD"},
-        "BODY WASH" : {"type" : "NON_FOOD"},
-        "TOOTHBRUSH" : {"type" : "NON_FOOD"},
-        "TOOTHPASTE" : {"type" : "NON_FOOD"},
-        "TOILET ROLL" : {"type" : "NON_FOOD"},
-        "SOAP" : {"type" : "NON_FOOD"},
+     (7, 1) : {"name" : "BATH TOWEL","type" : "NON_FOOD"},
+     (7, 2) : {"name" : "FACE TOWEL","type" : "NON_FOOD"},
+     (7, 3) : {"name" : "HAIR TOWEL","type" : "NON_FOOD"},
+     (8, 0) : {"name" : "HAND TOWEL","type" : "NON_FOOD"},
+     (8, 1) : {"name" : "SHAMPOO","type" : "NON_FOOD"},
+     (8, 2) : {"name" : "CONDITIONER","type" : "NON_FOOD"},
+     (8, 3) : {"name" : "BODY WASH","type" : "NON_FOOD"},
+     (9, 0) : {"name" :  "TOOTHBRUSH","type" : "NON_FOOD"},
+     (9, 1) : {"name" : "TOOTHPASTE","type" : "NON_FOOD"},
+     (9, 2) : {"name" : "TOILET ROLL","type" : "NON_FOOD"},
+     (9, 3) : {"name" : "SOAP","type" : "NON_FOOD"},
 }
 
 SHELF_LEVELS = []
@@ -79,6 +79,7 @@ SHELF_LEVELS = []
 empty_slots = {}
 
 supervisor = Supervisor()
+timestep = supervisor.getBasicTimeStep()
 
 shelf_group = supervisor.getFromDef("SHELVES")
 shelf_children = shelf_group.getField("children")
@@ -125,10 +126,13 @@ def shelf_placement():
 
     print("Shelves placed and products placed")
 
-def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
+def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
     if len(PRODUCTS) > 0:
-        product = random.choice((list)(PRODUCTS.keys()))
+
+        shelf_pos = (shelf_row, shelf_col)
+
+        product = (PRODUCTS[shelf_pos])
 
         item_spacing = 0.3
         fullness = 0.2 # Chance of product being placed
@@ -136,15 +140,15 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
         product_w = PLACEHOLDER_PRODUCT["w"] # Width of product
 
         items_per_row = 5
+
         shelf_num = 0
 
-        if empty_slots.get((shelf_row, shelf_col)) is None: # Initialise dict for current shelf
-            empty_slots[product] = {"product_type" : PRODUCTS[product]["type"], "empty_positions" : [], "shelf_pos" : (shelf_row, shelf_col)}
+        if product["name"] not in empty_slots: # Initialise dict for current shelf
+            empty_slots[product["name"]] = {"product_type" : PRODUCTS[shelf_pos]["type"], "empty_positions" : [], "shelf_pos" : (shelf_row, shelf_col)}
 
         for z_level in SHELF_LEVELS:
             item_index = 0
             shelf_num %= SHELF_COUNT
-
             z_level += 0.1 # Raise product slightly to avoid clipping with shelf when loading
 
             for i in range(items_per_row):
@@ -160,7 +164,7 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
                     prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '    # Use placeholder item as product model
                             f'translation {shelf_x} {y_offset} {z_level} '
                             f'rotation {rotation} '
-                            f'name "{product}_{shelf_row}_{shelf_col}_{shelf_num}_{item_index}" '
+                            f'name "{product["name"]}_{shelf_row}_{shelf_col}_{shelf_num}_{item_index}" '
                             f' }} ')
 
                     product_children.importMFNodeFromString(-1, prod)
@@ -170,15 +174,10 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
                     # Product name : {product_type : "type", empty_positions : [(x,y,z)], shelf_position : (row, col)}
 
                     product_position = (shelf_x, y_offset, z_level)
-                    empty_slots[product]["empty_positions"].append(product_position)
+                    empty_slots[product["name"]]["empty_positions"].append(product_position)
 
                 item_index += 1
-
             shelf_num += 1
-
-        # Remove product entry so there are no repeats
-        del PRODUCTS[product]
-
 
 
 # Main
@@ -188,6 +187,3 @@ shelf_placement()
 # Checking number of empty slots
 # for x, y in empty_slots.items():
 #     print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")
-
-emitter = supervisor.getDevice("emitter")
-receiver = supervisor.getDevice("receiver")
