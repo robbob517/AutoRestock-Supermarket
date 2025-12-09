@@ -6,6 +6,8 @@ import sys
 import random
 import pickle
 import os
+import json
+import time
 
 TIME_STEP = 32
 
@@ -328,52 +330,62 @@ def set_initial_position():
     set_torso_height(0.2, True)
 
 
+
 class PR2_qlearn_Agent:
     def __init__(self):
 
-        self.ALPHA =0.1
-        self.GAMMA =0.9
-        self.EPSILON =1.0
-        self.MIN_EPSILON =0.05
+        self.Alpha =0.1
+        self.Gamma =0.9
+        self.Epsilon =1.0
+        self.MIN_Epsilon =0.05
         self.DECAY =0.999
+        self.CARGO_location = (0.0, 0.0)
+        self.ITEM_properties = self.load_map_data()
 
-        self.ITEM_PROPERTIES = {
-            "ICE_CREAM": {"dist": 12.0, "type": "FROZEN", "start": 2},
-            "PIZZA": {"dist": 10.0, "type": "FROZEN", "start": 2},
-            "CHICKEN": {"dist": 11.0, "type": "FROZEN", "start": 1},
-            "PEAS": {"dist": 10.0, "type": "FROZEN", "start": 0},
-            "MILK": {"dist": 5.0, "type": "PRODUCE", "start": 3},
-            "APPLES": {"dist": 4.0, "type": "PRODUCE", "start": 5},
-            "BANANAS": {"dist": 4.0, "type": "PRODUCE", "start": 2},
-            "EGGS": {"dist": 5.0, "type": "PRODUCE", "start": 2},
-            "YOGURT": {"dist": 5.5, "type": "PRODUCE", "start": 3},
-            "BREAD": {"dist": 2.0, "type": "DRY", "start": 4},
-            "CEREAL": {"dist": 3.0, "type": "DRY", "start": 0},
-            "WATER": {"dist": 8.0, "type": "DRY", "start": 4},
-            "CHIPS": {"dist": 2.0, "type": "DRY", "start": 1},
-            "PASTA": {"dist": 3.0, "type": "DRY", "start": 7},
-            "SOAP": {"dist": 9.0, "type": "NON_FOOD", "start": 2}
-        }
-        #dist is distance of robot from shelf that needs item
-        #type is the category of the item
-        #start is how much of the item is already in stock at the start of the stocking process
-
-        self.ACTIONS = list(self.ITEM_PROPERTIES.keys())
+        self.ACTIONS = list(self.ITEM_properties.keys())
         self.NUM_ACTIONS = len(self.ACTIONS)
-        self.q_table_file ="pr2_q_memory.pkl"
-        self.q_table =self.load_q_table()
-
-        self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
+        self.q_table_file = "pr2_q_memory.pkl"
+        self.q_table = self.load_q_table()
 
 
-    def load_q_table(self):
+        self.inventory = {k: 0 for k in self.ACTIONS}
+
+    def heuristic(self, a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def load_map_data(self):
+        file_path = "supermarket_data.json"
+        while not os.path.exists(file_path):
+            time.sleep(2)
+        with open(file_path,"r") as f:
+            raw_data = json.load(f)
+
+        processed_props= {}
+        for name, data in raw_data.items():
+            if data["empty_positions"]:
+                target_xyz = data["empty_positions"][0]
+                target_coords= (target_xyz[0], target_xyz[1])
+            else:
+                target_coords= (0.0, 0.0)
+
+            dist = self.heuristic(self.CARGO_location, target_coords)
+            processed_props[name] = {
+                "dist":dist,
+                "type":data["product_type"],
+                "coords":target_coords,
+                "start": 0
+            }
+        return processed_props
+
+
+    def load_q_table(self): # if q table already exists use info from q table
             if os.path.exists(self.q_table_file):
                 with open(self.q_table_file,'rb') as f:
                     return pickle.load(f)
             else:
                 return {}
 
-    def save_q_table(self):
+    def save_q_table(self): # save existing q table
             print("saving q table")
             with open(self.q_table_file,'wb') as f:
                 pickle.dump(self.q_table,f)
@@ -389,7 +401,7 @@ class PR2_qlearn_Agent:
         else:
             return 3 #Stocked (Full)
 
-    def get_state_tuple(self):
+    def get_state_tuple(self): # gets category of item from the number of items in stock
         current_levels = []
         for item in self.ACTIONS:
             raw_count =self.inventory[item]
@@ -402,8 +414,8 @@ class PR2_qlearn_Agent:
             self.q_table[state] = np.zeros(self.NUM_ACTIONS)
         return self.q_table[state]
 
-    def choose_action(self, state):
-        if random.uniform(0, 1) < self.EPSILON:
+    def choose_action(self, state): # decides on the action
+        if random.uniform(0, 1) < self.Epsilon:
             return random.randint(0,self.NUM_ACTIONS - 1)
         else:
             q_vals = self.get_q_values(state)
@@ -412,8 +424,8 @@ class PR2_qlearn_Agent:
     def execute_action_text_mode(self, action_idx, step_num):
         # text mode to check if q table is running well ( not really needed for actual robot)
         item_name= self.ACTIONS[action_idx]
-        props= self.ITEM_PROPERTIES[item_name]
-        print(f"   [Step {step_num} | Eps: {self.EPSILON:.4f}] Stocking {item_name} (Type: {props['type']})...")
+        props= self.ITEM_properties[item_name]
+        print(f"   [Step {step_num} | Eps: {self.Epsilon:.4f}] Stocking {item_name} (Type: {props['type']})...")
         if self.inventory[item_name] <20:
             self.inventory[item_name]+= 1
             new_level = self.inventory[item_name]
@@ -426,7 +438,7 @@ class PR2_qlearn_Agent:
 
     def calculate_reward(self, old_inv, action_idx, success):
         item_name = self.ACTIONS[action_idx]
-        props = self.ITEM_PROPERTIES[item_name]
+        props = self.ITEM_properties[item_name]
         old_count = old_inv[item_name]
         old_cat = self.get_discrete_level(old_count)
 
@@ -464,14 +476,21 @@ class PR2_qlearn_Agent:
         q_values = self.get_q_values(s)
         old_q = q_values[a]
         next_max = np.max(self.get_q_values(s_prime))
-        new_q = old_q + self.ALPHA * (r + self.GAMMA * next_max - old_q)
+        new_q = old_q + self.Alpha * (r + self.Gamma * next_max - old_q)
         self.q_table[s][a] = new_q
+
+    def save_restocking_queue(self, action_log):
+        filename = "optimal_restocking_path.json"
+        print(f"Saving Path: Writing {len(action_log)} steeps to {filename}")
+        with open(filename, 'w') as f:
+            json.dump(action_log, f, indent=4)
 
     def train_text_mode(self):
         # used to check if the q table is working correctly will be removed when the robot works on its own
         print(f"Starting Q-Learning ")
         episode = 0
         steps_this_day = 0
+        current_day_log = []
         while robot.step(TIME_STEP) != -1:
             episode+=1
             steps_this_day+= 1
@@ -480,13 +499,17 @@ class PR2_qlearn_Agent:
             old_inv = self.inventory.copy()
             action_idx = self.choose_action(state)
             success =self.execute_action_text_mode(action_idx, steps_this_day)
+            if success:
+                item_name = self.ACTIONS[action_idx]
+                coords = self.ITEM_properties[item_name]["coords"]
+                current_day_log.append([list(coords), item_name])
 
             reward = self.calculate_reward(old_inv, action_idx, success)
             next_state = self.get_state_tuple()
             self.update_q_table(state,action_idx,reward,next_state)
 
-            if self.EPSILON > self.MIN_EPSILON:
-                self.EPSILON *= self.DECAY
+            if self.Epsilon > self.MIN_Epsilon:
+                self.Epsilon *= self.DECAY
 
             if all(value == 20 for value in self.inventory.values()):
                 print(f"\n Store fully stocked")
@@ -494,9 +517,11 @@ class PR2_qlearn_Agent:
                 self.save_q_table()
 
                 if steps_this_day < 350:
+                    self.save_restocking_queue(current_day_log)
                     break
-                self.inventory = {k: v["start"] for k, v in self.ITEM_PROPERTIES.items()}
+                self.inventory = {k: 0 for k in self.ACTIONS}
                 steps_this_day = 0
+                current_day_log = []
 
 if __name__ == "__main__":
     initialize_devices()

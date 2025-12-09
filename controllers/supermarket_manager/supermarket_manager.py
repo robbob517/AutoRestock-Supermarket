@@ -4,6 +4,7 @@
 #  from controller import Robot, Motor, DistanceSensor
 from controller import Supervisor
 import random
+import json
 
 # Shelf Dimensions
 SHELF_HEIGHT = 2.5
@@ -185,6 +186,13 @@ def product_placement(shelf_x, shelf_y, shelf_col, shelf_row, east_facing):
 # Main
 calculate_shelf_levels()
 shelf_placement()
+
+output_file = "supermarket_data.json"
+print(f"Exporting {len(empty_slots)} products to {output_file}...")
+with open(output_file, "w") as f:
+    json.dump(empty_slots, f, indent=4)
+
+print("Export complete.")
 
 # Checking number of empty slots
 # for x, y in empty_slots.items():
