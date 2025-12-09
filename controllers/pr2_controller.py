@@ -9,7 +9,7 @@ import os
 import json
 import time
 
-TIME_STEP = 32
+TIME_STEP = 16
 
 MAX_WHEEL_SPEED = 3.0
 WHEELS_DISTANCE = 0.4492

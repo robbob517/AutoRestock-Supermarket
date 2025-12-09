@@ -15,7 +15,7 @@ import test_map
 # ----------------------
 # Simulation / robot params
 # ----------------------
-TIME_STEP = 32
+TIME_STEP = 16
 
 # Particle Filtering
 num_particles = 200
