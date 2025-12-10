@@ -4,3 +4,5 @@ worlds/.AutoRestock.jpg
 protos/icons/Pr2.png
 controllers/__pycache__
 controllers/path_planner/__pycache__
+controllers/supermarket_manager/__pycache__
+controllers/supermarket_manager/supermarket_data.json
