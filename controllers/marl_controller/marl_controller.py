@@ -1,4 +1,13 @@
+"""marl_controller controller."""
 # Integrating code from path_planner.py and utilising PR2_qlearn_agent
+
+# Adjusting python import root
+import sys
+import os
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 import json
 import numpy as np
@@ -51,9 +60,11 @@ def run():
         delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = odometry.calc_odometry(current_x, current_y, current_theta, prev_wheels_angle)
 
         # Listen for server msgs
+        print("Waiting for messages")
         server_data = None
         while receiver.getQueueSize() > 0:
-            msg = receiver.getMessage().decode('utf-8')
+            print("Message received")
+            msg = receiver.getData().decode('utf-8')
             data = json.loads(msg)
             receiver.nextPacket()
             if data["type"] == "STATE":
@@ -86,3 +97,58 @@ def run():
 
             robot_state = STATE_PLANNING
             last_state_tuple = current_state_tuple
+
+        # Calculate path to goal
+        elif robot_state == STATE_PLANNING:
+            start_node = (current_x, current_y)
+            goal_node = target_coords
+
+            path = a_star_search.a_star_path(start_node, goal_node)
+
+            if path:
+                world_path = [test_map.map_to_world(cell[0], cell[1]) for cell in path]
+                instructions = a_star_search.move_instructions(world_path)
+                path_index = 0
+                robot_state = STATE_MOVING
+            else:
+                robot_state = STATE_IDLE
+
+        # Move to goal
+        elif robot_state == STATE_MOVING:
+            if path_index >= len(instructions):
+                pr2.set_wheels_speed(0)
+                robot_state = STATE_RESTOCKING
+                continue
+
+            target_dir, target_x, target_y = instructions[path_index]
+
+            angle_to_turn = a_star_search.get_rotation(current_orientation, target_dir)
+            if abs(angle_to_turn) > 1e-3:
+                pr2.set_wheels_speed(0)
+                pr2.robot_rotate(angle_to_turn)
+                current_orientation = target_dir
+
+            if target_dir in ['up', 'down']:
+                distance = abs(target_x - current_x)
+            else:
+                distance = abs(target_y - current_y)
+
+            if distance > 0.01:
+                pr2.set_wheels_speed(3)
+                # If target_dir is left, right means robot needs to turn
+            else:
+                pr2.set_wheels_speed(0)
+                path_index += 1
+
+        elif robot_state == STATE_RESTOCKING:
+            print(f"Robot {robot_name} restocking item {target_item}")
+            msg = {
+                "type" : "RESTOCK",
+                "robot_id" : robot_name,
+                "item" : target_item,
+            }
+            emitter.send(json.dumps(msg).encode('utf-8'))
+
+            robot_state = STATE_IDLE
+
+run()
