@@ -1,6 +1,6 @@
 import heapq
 import math
-from controllers.path_planner import test_map
+from controllers.path_planner import supermarket_map as test_map
 
 # Function to calculate Manhattan Distance
 def heuristic(a, b):
@@ -22,10 +22,45 @@ def calc_f_cost(current_node, goal, g_cost):
     h_cost = heuristic(current_node, goal)
     return g_cost + h_cost
 
+def get_nearest_walkable_node(target_node):#
+    target_x, target_y = target_node
+
+    if 0 <= target_x < test_map.MAP_SIZE and 0 <= target_y < test_map.MAP_SIZE:
+        if test_map.og[target_x][target_y] == 1:
+            return target_node
+
+    queue = [target_node]
+    visited = {target_node}
+
+    while queue:
+        current_x, current_y = queue.pop(0)
+        if 0 <= current_x < test_map.MAP_SIZE and 0 <= current_y < test_map.MAP_SIZE:
+            if test_map.og[current_x][current_y] == 1:
+                return (current_x, current_y)
+
+        steps = [(-1,0),(1,0),(0,-1),(0,1)]
+        for dx, dy in steps:
+            nx, ny = current_x + dx, current_y + dy
+            if (nx, ny) not in visited:
+                if abs(nx - target_x) + abs(ny - target_y) < 10:
+                    queue.append((nx, ny))
+                    visited.add((nx, ny))
+
+    return None
+
 # Main function to find and construct a map from start node to goal node
 def a_star_path(start, goal):
     start_node = test_map.world_to_map(start[0], start[1])
-    goal_node = test_map.world_to_map(goal[0], goal[1])
+    raw_goal_node = test_map.world_to_map(goal[0], goal[1])
+
+    goal_node = get_nearest_walkable_node(raw_goal_node)
+
+    # print(f"\nStart Node: {start_node}")
+    # print(f"Old goal: {raw_goal_node}, New goal: {goal_node}\n")
+
+    if goal_node is None:
+        return None
+
     open_set = []
     came_from = {}
     g_cost = {start_node: 0}
@@ -70,9 +105,9 @@ def get_rotation(current, target):
     diff = target_idx - current_idx
     # Choose the shortest rotation
     if diff == 1 or diff == -3:
-        return math.pi/2    # 90 degrees right
+        return -math.pi/2    # 90 degrees right
     elif diff == -1 or diff == 3:
-        return -math.pi/2   # 90 degrees left
+        return math.pi/2   # 90 degrees left
     elif diff == 2 or diff == -2:
         return math.pi      # 180 degrees
     else:
@@ -86,13 +121,13 @@ def move_instructions(world_path):
         x_next, y_next = world_path[i]
 
         if x_next > x_prev:
-            target_dir = 'up'
-        elif x_next < x_prev:
-            target_dir = 'down'
-        elif y_next > y_prev:
             target_dir = 'right'
-        elif y_next < y_prev:
+        elif x_next < x_prev:
             target_dir = 'left'
+        elif y_next > y_prev:
+            target_dir = 'up'
+        elif y_next < y_prev:
+            target_dir = 'down'
 
         instructions.append((target_dir, x_next, y_next))
     return instructions
