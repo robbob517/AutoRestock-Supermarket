@@ -3,17 +3,17 @@
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/clearpath/pr2/protos/Pr2.proto"
 EXTERNPROTO "../protos/Wall.proto"
 IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/CerealBox.proto"
+EXTERNPROTO "../protos/Pr2.proto"
 
 WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation -0.2664311042786268 -0.26558378813398587 0.9265418059393076 4.6329911086843705
-  position -0.7546153338459975 46.644824677179265 31.26282742784137
+  orientation -0.28753237440287066 -0.2884149258716848 0.9133137271522191 4.624889707922696
+  position -1.4425587558003434 37.45094259345245 27.973512551908062
 }
 TexturedBackground {
 }
@@ -33,18 +33,6 @@ Robot {
   name "Supermarket Manager"
   controller "supermarket_manager"
   supervisor TRUE
-}
-DEF PR2_1 Pr2 {
-  translation 2 -12 0 # Shift left
-  rotation 0 0 1 1.5708
-  name "pr2_1"
-  controller "<extern>"
-}
-DEF PR2_2 Pr2 {
-  translation -2 -12 0 # Shift right
-  rotation 0 0 1 1.5708
-  name "pr2_2"
-  controller "<extern>"
 }
 DEF SUPERMARKET_ENV Group {
   children [
@@ -93,4 +81,14 @@ DEF SUPERMARKET_ENV Group {
     DEF PRODUCTS Group {
     }
   ]
+}
+Pr2 {
+  translation 2 -12 0
+  rotation 0 0 1 1.5708
+  name "pr2_1"
+}
+Pr2 {
+  translation -2 -12 0
+  rotation 0 0 1 1.5708
+  name "pr2_2"
 }
