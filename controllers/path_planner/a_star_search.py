@@ -1,6 +1,6 @@
 import heapq
 import math
-import test_map
+from controllers.path_planner import test_map
 
 # Function to calculate Manhattan Distance
 def heuristic(a, b):

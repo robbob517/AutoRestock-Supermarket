@@ -1,7 +1,7 @@
 import numpy as np
 
 # Map params
-MAP_RES = 0.05    # meters per cell
+MAP_RES = 1    # meters per cell
 WORLD_SIZE = 30.0
 MAP_SIZE = int(WORLD_SIZE / MAP_RES)
 MAP_ORIGIN = MAP_SIZE // 2
