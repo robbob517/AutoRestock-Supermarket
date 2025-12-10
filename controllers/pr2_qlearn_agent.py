@@ -49,7 +49,7 @@ class PR2_qlearn_Agent:
                 "dist":dist,
                 "type":data["product_type"],
                 "coords":target_coords,
-                "start": 0
+                "start": 20 - len(target_coords)    # Starting stock
             }
         return processed_props
 
@@ -161,6 +161,8 @@ class PR2_qlearn_Agent:
         with open(filename, 'w') as f:
             json.dump(action_log, f, indent=4)
 
+
+    # Text mode training for testing
     def train_text_mode(self):
         # used to check if the q table is working correctly will be removed when the robot works on its own
         print(f"Starting Q-Learning ")
