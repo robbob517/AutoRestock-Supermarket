@@ -190,6 +190,13 @@ def run():
     calculate_shelf_levels()
     shelf_placement()
 
+    output_file = "supermarket_data.json"
+    print(f"Exporting {len(shelves)} products to {output_file}...")
+    with open(output_file, "w") as f:
+        json.dump(shelves, f, indent=4)
+
+    print("Export complete.")
+
     emitter = supervisor.getEmitter("emitter")
     receiver = supervisor.getReceiver("receiver")
     receiver.enable(TIMESTEP)
@@ -215,14 +222,7 @@ def run():
             "inventory" : current_inventory,
             "reward" : global_reward,
         }
-        emitter.send(json.dumps(state_msg)).encode("utf-8")
-
-output_file = "supermarket_data.json"
-print(f"Exporting {len(empty_slots)} products to {output_file}...")
-with open(output_file, "w") as f:
-    json.dump(empty_slots, f, indent=4)
-
-print("Export complete.")
+        emitter.send(json.dumps(state_msg).encode("utf-8"))
 
 run()
 
