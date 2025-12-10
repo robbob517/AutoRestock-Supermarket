@@ -1,5 +1,5 @@
 import numpy as np
-from controller import Supervisor
+from controller import Robot
 import math
 import sys
 
@@ -24,7 +24,7 @@ FL_ROTATION, FR_ROTATION, BL_ROTATION, BR_ROTATION = range(4)
 SHOULDER_ROLL, SHOULDER_LIFT, UPPER_ARM_ROLL, ELBOW_LIFT, WRIST_ROLL = range(5)
 LEFT_FINGER, RIGHT_FINGER = 0, 1
 
-robot = Supervisor()
+robot = Robot()
 
 wheel_motors = [None] * 8
 wheel_sensors = [None] * 8
