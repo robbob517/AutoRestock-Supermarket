@@ -28,9 +28,9 @@ def run():
 
     # Initialise path planning (from path_planner.py)
     if robot_name == "pr2_1":
-        current_x, current_y, theta = 2, -12, 0
+        current_x, current_y, current_theta = 2, -12, 0
     else:
-        current_x, current_y, theta = -2, -12, 0
+        current_x, current_y, current_theta = -2, -12, 0
     prev_wheels_angle = np.zeros(8)
 
     current_path = []
@@ -44,3 +44,45 @@ def run():
     target_item = None
     current_action_index = None
     last_state_tuple = None
+
+    # Main loop
+    while robot.step(TIMESTEP) != -1:
+        # Odometry
+        delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = odometry.calc_odometry(current_x, current_y, current_theta, prev_wheels_angle)
+
+        # Listen for server msgs
+        server_data = None
+        while receiver.getQueueSize() > 0:
+            msg = receiver.getMessage().decode('utf-8')
+            data = json.loads(msg)
+            receiver.nextPacket()
+            if data["type"] == "STATE":
+                server_data = data
+
+        # Check for data received, if not, wait until received
+        if server_data is None and robot_state == STATE_IDLE:
+            continue
+
+        # MARL Loop
+
+        # Q-learning
+        if server_data and last_state_tuple is not None and current_action_index is not None:
+            agent.inventory = server_data["inventory"]
+            new_state_tuple = agent.get_state_tuple()
+            reward = server_data["reward"]
+
+            # Update the q table
+            agent.update_q_table(last_state_tuple, current_action_index, reward, new_state_tuple)
+            last_state_tuple = None
+
+        if robot_state == STATE_IDLE and server_data:
+            agent.inventory = server_data["inventory"]
+            current_state_tuple = agent.get_state_tuple()
+
+            current_action_index = agent.choose_action(current_state_tuple)
+            target_item = agent.ACTIONS[current_action_index]
+
+            target_coords = agent.ITEM_properties[target_item]["coords"]
+
+            robot_state = STATE_PLANNING
+            last_state_tuple = current_state_tuple
