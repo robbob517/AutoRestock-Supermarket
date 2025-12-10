@@ -1,0 +1,46 @@
+# Integrating code from path_planner.py and utilising PR2_qlearn_agent
+
+import json
+import numpy as np
+
+from controllers.path_planner import odometry, a_star_search, test_map
+from controllers import pr2_qlearn_agent as qlearn
+from controllers import pr2_controller as pr2
+
+TIMESTEP = 16
+
+STATE_IDLE = 0
+STATE_PLANNING = 1
+STATE_MOVING = 2
+STATE_REFILLING = 3
+STATE_RESTOCKING = 4
+
+def run():
+    robot = pr2.robot
+    robot_name = robot.getName()
+    emitter = robot.getDevice("emitter")
+    receiver = robot.getDevice("receiver")
+    receiver.enable(TIMESTEP)
+
+    pr2.initialize_devices()
+    pr2.enable_devices()
+    pr2.set_initial_position()
+
+    # Initialise path planning (from path_planner.py)
+    if robot_name == "pr2_1":
+        current_x, current_y, theta = 2, -12, 0
+    else:
+        current_x, current_y, theta = -2, -12, 0
+    prev_wheels_angle = np.zeros(8)
+
+    current_path = []
+    path_index = 0
+    current_orientation = 'up'
+
+    # Initialise qlearning agent
+    agent = qlearn.PR2_qlearn_Agent(robot, TIMESTEP)
+
+    robot_state = STATE_IDLE
+    target_item = None
+    current_action_index = None
+    last_state_tuple = None
