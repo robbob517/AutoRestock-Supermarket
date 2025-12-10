@@ -12,8 +12,8 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation -0.28753237440287066 -0.2884149258716848 0.9133137271522191 4.624889707922696
-  position -1.4425587558003434 37.45094259345245 27.973512551908062
+  orientation -0.2581711825826699 -0.25130926157845096 0.9328404448397161 4.616078547152922
+  position -0.1434577738704188 39.37337690898279 24.994701419643587
 }
 TexturedBackground {
 }
@@ -86,9 +86,11 @@ Pr2 {
   translation 2 -12 0
   rotation 0 0 1 1.5708
   name "pr2_1"
+  controller "marl_controller"
 }
 Pr2 {
   translation -2 -12 0
   rotation 0 0 1 1.5708
   name "pr2_2"
+  controller "marl_controller"
 }
