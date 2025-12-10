@@ -47,24 +47,26 @@ def run():
     current_orientation = 'up'
 
     # Initialise qlearning agent
-    agent = qlearn.PR2_qlearn_Agent(robot, TIMESTEP)
+    agent = qlearn.PR2_qlearn_Agent(robot, TIMESTEP, 0.5)
 
     robot_state = STATE_IDLE
     target_item = None
     current_action_index = None
     last_state_tuple = None
+    previous_inventory = None
 
     # Main loop
     while robot.step(TIMESTEP) != -1:
+
+        print(f"{robot_name}: Current state: {robot_state}")
+
         # Odometry
         delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = odometry.calc_odometry(current_x, current_y, current_theta, prev_wheels_angle)
 
         # Listen for server msgs
-        print("Waiting for messages")
         server_data = None
-        while receiver.getQueueSize() > 0:
-            print("Message received")
-            msg = receiver.getData().decode('utf-8')
+        while receiver.getQueueLength() > 0:
+            msg = receiver.getString()
             data = json.loads(msg)
             receiver.nextPacket()
             if data["type"] == "STATE":
@@ -80,12 +82,19 @@ def run():
         if server_data and last_state_tuple is not None and current_action_index is not None:
             agent.inventory = server_data["inventory"]
             new_state_tuple = agent.get_state_tuple()
-            reward = server_data["reward"]
+            global_reward = server_data["reward"]
 
             # Update the q table
-            agent.update_q_table(last_state_tuple, current_action_index, reward, new_state_tuple)
-            last_state_tuple = None
 
+            # Calculate local reward
+            success= True
+            local_reward = agent.calculate_reward(previous_inventory, current_action_index, success)
+
+            agent.update_q_table(last_state_tuple, current_action_index, local_reward, global_reward, new_state_tuple)
+            last_state_tuple = None
+            current_action_index = None
+
+        # Choosing a new action
         if robot_state == STATE_IDLE and server_data:
             agent.inventory = server_data["inventory"]
             current_state_tuple = agent.get_state_tuple()
@@ -95,13 +104,19 @@ def run():
 
             target_coords = agent.ITEM_properties[target_item]["coords"]
 
-            robot_state = STATE_PLANNING
+            previous_inventory = agent.inventory.copy()
             last_state_tuple = current_state_tuple
+            robot_state = STATE_PLANNING
+
+            print(f"{robot_name}: Chosen item {target_item}")
+
 
         # Calculate path to goal
         elif robot_state == STATE_PLANNING:
             start_node = (current_x, current_y)
             goal_node = target_coords
+
+            print(f"{robot_name}: Start Node -> Goal node: {start_node} -> {goal_node}")
 
             path = a_star_search.a_star_path(start_node, goal_node)
 
@@ -125,7 +140,6 @@ def run():
             angle_to_turn = a_star_search.get_rotation(current_orientation, target_dir)
             if abs(angle_to_turn) > 1e-3:
                 pr2.set_wheels_speed(0)
-                pr2.robot_rotate(angle_to_turn)
                 current_orientation = target_dir
 
             if target_dir in ['up', 'down']:
@@ -147,7 +161,7 @@ def run():
                 "robot_id" : robot_name,
                 "item" : target_item,
             }
-            emitter.send(json.dumps(msg).encode('utf-8'))
+            emitter.send(json.dumps(msg))
 
             robot_state = STATE_IDLE
 

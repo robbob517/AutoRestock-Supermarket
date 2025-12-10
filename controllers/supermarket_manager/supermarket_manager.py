@@ -1,7 +1,5 @@
 """supermarket_manager controller."""
 
-# You may need to import some classes of the controller module. Ex:
-#  from controller import Robot, Motor, DistanceSensor
 from controller import Supervisor
 import random
 import json
@@ -155,11 +153,11 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
         for z_level in SHELF_LEVELS:
             item_index = 0
             shelf_num %= SHELF_COUNT
-            z_level += 0.1 # Raise product slightly to avoid clipping with shelf when loading
+            z_level = round(z_level + 0.1, 2) # Raise product slightly to avoid clipping with shelf when loading
 
             for i in range(ITEMS_PER_ROW):
 
-                y_offset = (shelf_y - (SHELF_WIDTH / 2) - SHELF_THICKNESS + ((i + 1) * (product_w + item_spacing)))
+                y_offset = round((shelf_y - (SHELF_WIDTH / 2) - SHELF_THICKNESS + ((i + 1) * (product_w + item_spacing))), 2)
 
                 if random.random() > (1 - fullness):  # Likelihood of placing product on shelf
                     if east_facing:
@@ -179,7 +177,7 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
                     # Dictionary Structure
                     # Product name : {product_type : "type", empty_positions : [(x,y,z)], shelf_grid : (row, col), shelf_pos : (shelf_x, shelf_y)}
 
-                    product_position = (shelf_x, y_offset, z_level)
+                    product_position = (shelf_x, y_offset, z_level,)
                     shelves[product["name"]]["empty_positions"].append(product_position)
 
                 item_index += 1
@@ -190,23 +188,26 @@ def run():
     calculate_shelf_levels()
     shelf_placement()
 
+    # Exporting supermarket data for qlearning
     output_file = "supermarket_data.json"
     print(f"Exporting {len(shelves)} products to {output_file}...")
     with open(output_file, "w") as f:
         json.dump(shelves, f, indent=4)
-
     print("Export complete.")
 
-    emitter = supervisor.getEmitter("emitter")
-    receiver = supervisor.getReceiver("receiver")
+    emitter = supervisor.getDevice("emitter")
+    receiver = supervisor.getDevice("receiver")
     receiver.enable(TIMESTEP)
 
+    # Current inventory structure = Item Name : Current stock of item
     current_inventory = {product["name"]: (ITEMS_PER_SHELF - len(shelves[product["name"]]["empty_positions"])) for
                          product in PRODUCTS.values()}
 
-    while supervisor.step(16) != 1:
+    previous_total_stock = sum(current_inventory.values())
+
+    while supervisor.step(TIMESTEP) != 1:
         while receiver.getQueueLength() > 0:
-            message = receiver.getData().decode('utf-8')
+            message = receiver.getString()
             data = json.loads(message)
             receiver.nextPacket()
 
@@ -216,13 +217,16 @@ def run():
                 print(f"Robot restocked item {item}. New stock count {current_inventory[item]}")
 
         total_stock = sum(current_inventory.values())
-        global_reward = total_stock
+
+        reward = (total_stock - previous_total_stock) * 10 - 0.1
+        previous_total_stock = total_stock
 
         state_msg = {
+            "type" : "STATE",
             "inventory" : current_inventory,
-            "reward" : global_reward,
+            "reward" : reward,
         }
-        emitter.send(json.dumps(state_msg).encode("utf-8"))
+        emitter.send(json.dumps(state_msg))
 
 run()
 

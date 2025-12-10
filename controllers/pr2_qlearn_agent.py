@@ -6,7 +6,11 @@ import time
 import numpy as np
 
 class PR2_qlearn_Agent:
-    def __init__(self, robot, timestep):
+    def __init__(self, robot, timestep, coop_weighting):
+
+        self.robot = robot
+        self.TIMESTEP = timestep
+        self.COOP_WEIGHT = coop_weighting
 
         self.Alpha =0.1
         self.Gamma =0.9
@@ -15,8 +19,6 @@ class PR2_qlearn_Agent:
         self.DECAY =0.999
         self.CARGO_location = (0.0, 0.0)
         self.ITEM_properties = self.load_map_data()
-        self.robot = robot
-        self.TIMESTEP = timestep
 
         self.ACTIONS = list(self.ITEM_properties.keys())
         self.NUM_ACTIONS = len(self.ACTIONS)
@@ -30,11 +32,14 @@ class PR2_qlearn_Agent:
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
     def load_map_data(self):
-        file_path = "supermarket_data.json"
+        file_path = "../supermarket_manager/supermarket_data.json"
         while not os.path.exists(file_path):
-            time.sleep(2)
+            print(f"{self.robot.getName()}: Attempting to load data")
+            self.robot.step()
         with open(file_path,"r") as f:
             raw_data = json.load(f)
+        print(f"{self.robot.getName()}: Data Loaded")
+        # print(raw_data)
 
         processed_props= {}
         for name, data in raw_data.items():
@@ -148,11 +153,14 @@ class PR2_qlearn_Agent:
 
         return total_reward
 
-    def update_q_table(self,s,a,r,s_prime):
+    def update_q_table(self,s,a,local_reward,global_reward,s_prime):
+        # Mixed sum weighted reward calculation
+        total_reward = ((1 - self.COOP_WEIGHT) * local_reward + self.COOP_WEIGHT * global_reward)
+
         q_values = self.get_q_values(s)
         old_q = q_values[a]
         next_max = np.max(self.get_q_values(s_prime))
-        new_q = old_q + self.Alpha * (r + self.Gamma * next_max - old_q)
+        new_q = old_q + self.Alpha * (total_reward + self.Gamma * next_max - old_q)
         self.q_table[s][a] = new_q
 
     def save_restocking_queue(self, action_log):
