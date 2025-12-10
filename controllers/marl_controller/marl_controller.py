@@ -12,7 +12,7 @@ if project_root not in sys.path:
 import json
 import numpy as np
 
-from controllers.path_planner import odometry, a_star_search, test_map
+from controllers.path_planner import odometry, a_star_search, supermarket_map
 from controllers import pr2_qlearn_agent as qlearn
 from controllers import pr2_controller as pr2
 
@@ -44,7 +44,7 @@ def run():
 
     current_path = []
     path_index = 0
-    current_orientation = 'up'
+    current_orientation = 'right'
 
     # Initialise qlearning agent
     agent = qlearn.PR2_qlearn_Agent(robot, TIMESTEP, 0.5)
@@ -58,10 +58,9 @@ def run():
     # Main loop
     while robot.step(TIMESTEP) != -1:
 
-        print(f"{robot_name}: Current state: {robot_state}")
-
-        # Odometry
-        delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = odometry.calc_odometry(current_x, current_y, current_theta, prev_wheels_angle)
+        # Update Odometry
+        delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = odometry.calc_odometry(
+            current_x, current_y, current_theta, prev_wheels_angle)
 
         # Listen for server msgs
         server_data = None
@@ -113,6 +112,7 @@ def run():
 
         # Calculate path to goal
         elif robot_state == STATE_PLANNING:
+
             start_node = (current_x, current_y)
             goal_node = target_coords
 
@@ -121,17 +121,18 @@ def run():
             path = a_star_search.a_star_path(start_node, goal_node)
 
             if path:
-                world_path = [test_map.map_to_world(cell[0], cell[1]) for cell in path]
+                world_path = [supermarket_map.map_to_world(cell[0], cell[1]) for cell in path]
                 instructions = a_star_search.move_instructions(world_path)
-                path_index = 0
                 robot_state = STATE_MOVING
             else:
                 robot_state = STATE_IDLE
 
         # Move to goal
         elif robot_state == STATE_MOVING:
+            # Reached end of instructions (at goal?)
             if path_index >= len(instructions):
                 pr2.set_wheels_speed(0)
+                path_index = 0
                 robot_state = STATE_RESTOCKING
                 continue
 
@@ -140,12 +141,13 @@ def run():
             angle_to_turn = a_star_search.get_rotation(current_orientation, target_dir)
             if abs(angle_to_turn) > 1e-3:
                 pr2.set_wheels_speed(0)
+                pr2.robot_rotate(angle_to_turn)
                 current_orientation = target_dir
 
             if target_dir in ['up', 'down']:
-                distance = abs(target_x - current_x)
-            else:
                 distance = abs(target_y - current_y)
+            else:
+                distance = abs(target_x - current_x)
 
             if distance > 0.01:
                 pr2.set_wheels_speed(3)
