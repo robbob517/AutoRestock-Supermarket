@@ -207,38 +207,7 @@ def run():
     receiver = supervisor.getDevice("receiver")
     receiver.enable(TIMESTEP)
 
-    # Current inventory structure = Item Name : Current stock of item
-    current_inventory = {product["name"]: (ITEMS_PER_SHELF - len(shelves[product["name"]]["empty_positions"])) for
-                         product in PRODUCTS.values()}
 
-    previous_total_stock = sum(current_inventory.values())
-
-    while supervisor.step(TIMESTEP) != 1:
-        while receiver.getQueueLength() > 0:
-            message = receiver.getString()
-            data = json.loads(message)
-            receiver.nextPacket()
-
-            if data["type"] == "RESTOCK":
-                product = data["item"]
-                position = data["position"]
-
-                add_product_at_pos(product, position)
-
-                current_inventory[product] += 1
-                print(f"Robot restocked product {product}, new stock count: {current_inventory[product]}")
-
-        total_stock = sum(current_inventory.values())
-
-        reward = (total_stock - previous_total_stock) * 10 - 0.1
-        previous_total_stock = total_stock
-
-        state_msg = {
-            "type" : "STATE",
-            "inventory" : current_inventory,
-            "reward" : reward,
-        }
-        emitter.send(json.dumps(state_msg))
 
 run()
 
