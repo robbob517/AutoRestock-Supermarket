@@ -26,6 +26,10 @@ og = np.full((MAP_SIZE, MAP_SIZE), FREE, dtype=int)
 def world_to_map(wx, wy):
     mx = int(round(wx / MAP_RES)) + int(MAP_ORIGIN)
     my = int(round(wy / MAP_RES)) + int(MAP_ORIGIN)
+
+    mx = max(0, min(mx, MAP_SIZE - 1))
+    my = max(0, min(my, MAP_SIZE - 1))
+
     return mx, my
 
 def map_to_world(mx, my):
@@ -49,8 +53,8 @@ def add_object(center_x, center_y, size_x, size_y):
     og[x1:x2, y1:y2] = OCCUPIED
 
 # Bounding Walls
-add_object(10, 0, 0.2, 30) # East Wall
-add_object(-10, 0, 0.2, 30) # West Wall
+add_object(-10, 0, 0.2, 30) # East Wall
+add_object(10, 0, 0.2, 30) # West Wall
 add_object(0, 14.9, 20, 0.2) # North Wall
 add_object(0, -14.9, 20, 0.2) # South Wall
 add_object(-5.65, -8, 8.5, 0.2) # Storage Divider Right

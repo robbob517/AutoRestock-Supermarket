@@ -37,7 +37,7 @@ class PR2_qlearn_Agent:
             self.robot.step()
         with open(file_path,"r") as f:
             raw_data = json.load(f)
-        print(f"{self.robot.getName()}: Data Loaded")
+        print(f"{self.robot.getName()}: Q-Learning Data Loaded")
         # print(raw_data)
 
         processed_props= {}

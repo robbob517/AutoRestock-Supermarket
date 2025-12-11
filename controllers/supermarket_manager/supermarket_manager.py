@@ -86,7 +86,7 @@ shelves = {}
 
 supervisor = Supervisor()
 
-TIMESTEP = int(supervisor.getBasicTimeStep())
+TIMESTEP = 16
 
 shelf_group = supervisor.getFromDef("SHELVES")
 shelf_children = shelf_group.getField("children")
@@ -191,19 +191,22 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
 def add_robots(robot_count):
     for i in range(robot_count):
-        robot = (f'Pr2 {{ '
+        robot = (f'DEF PR2_{i+1} Pr2 {{ '
                  f'translation {-(WORLD_WIDTH/2) + ((i+1)*3)}, -12, 0 '
                  f'rotation 0 0 1 1.5708 '
                  f'name "pr2_{i+1}" '
                  f'controller "marl_controller" '
+                 f'supervisor TRUE '
                  f' }} '
                  )
 
         robots_children.importMFNodeFromString(-1, robot)
 
 def add_product_at_pos(product, position):
+    pos_x, pos_y, pos_z = position
+
     prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '
-            f'translation {position[0]} {position[1]} {position[2]} '
+            f'translation {pos_x} {pos_y} {pos_z} '
             f'name "{product}" '
             f' }} ')
 
@@ -235,6 +238,8 @@ def run():
     current_inventory = {product["name"] : (ITEMS_PER_SHELF - len(shelves[product["name"]]["empty_positions"])) for
                          product in PRODUCTS.values()}
 
+    global_reward = 0
+
     while supervisor.step(TIMESTEP) != -1:
 
         # Check for messages from robots
@@ -242,24 +247,29 @@ def run():
             message = receiver.getString()
             data = json.loads(message)
 
-            # Data format, {Type : { robot_id : id, position : pos} }
+            # Data format, {Type : type, robot_id : id, position : pos}
             if data["type"] == "UPDATE_POS":
-                pass
+                robots_positions[data["robot_id"]] = data["position"]
+                # print(f"Server: Received position update for {data['robot_id']} at position {data['position']}")
 
-            # Data format, {Type : { robot_id : id, item_name : name, item_position : pos } }
+            # Data format, {Type : type, robot_id : id, item_name : name, item_position : pos }
             elif data["type"] == "RESTOCKING":
-                pass
+                product = data["item_name"]
+                product_position = data["position"]
+                current_inventory[product] += 1
+
+                add_product_at_pos(product, product_position)
+                print(f"Server: Received inventory for {product} at position {data['position']}")
 
             receiver.nextPacket()
 
         # Calculate rewards
 
-
         # Send messages to robots
         global_broadcast = {
             "type" : "GLOBAL",
-            "reward" : None,
-            "neighbour_positions" : None,
+            "reward" : global_reward,
+            "robots_positions" : robots_positions,
             "inventory" : current_inventory,
         }
         emitter.send(json.dumps(global_broadcast))

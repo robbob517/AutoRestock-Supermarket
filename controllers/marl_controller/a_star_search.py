@@ -51,8 +51,10 @@ def get_nearest_walkable_node(target_node):#
 
 # Main function to find and construct a map from start node to goal node
 def a_star_path(start, goal):
-    start_node = supermarket_map.world_to_map(start[0], start[1])
+    raw_start_node = supermarket_map.world_to_map(start[0], start[1])
     raw_goal_node = supermarket_map.world_to_map(goal[0], goal[1])
+
+    start_node = get_nearest_walkable_node(raw_start_node)
 
     goal_node = get_nearest_walkable_node(raw_goal_node)
     goal = supermarket_map.map_to_world(goal_node[0], goal_node[1])
