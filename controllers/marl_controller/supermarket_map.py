@@ -37,9 +37,7 @@ def map_to_world(mx, my):
     wy = (my - MAP_ORIGIN) * MAP_RES
     return wx, wy
 
-def add_object(center_x, center_y, size_x, size_y):
-
-    margin = 0.6
+def add_object(center_x, center_y, size_x, size_y, margin = 0.6):
 
     start_x_m = center_x - (size_x / 2) - margin
     end_x_m = center_x + (size_x / 2) + margin
@@ -65,6 +63,6 @@ for row in range(ROWS):
         current_x = START_X + (row * SHELF_DEPTH) + ((row // 2) * AISLE_WIDTH)
         current_y = START_Y + (col * (SHELF_WIDTH + SHELF_SPACING))
 
-        add_object(current_x, current_y, SHELF_DEPTH, SHELF_WIDTH)
+        add_object(current_x, current_y, SHELF_DEPTH, SHELF_WIDTH, 0.8)
 
 
