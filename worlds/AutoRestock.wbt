@@ -6,7 +6,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "../protos/Wall.proto"
 IMPORTABLE EXTERNPROTO "../protos/Shelf.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/kitchen/breakfast/protos/CerealBox.proto"
-EXTERNPROTO "../protos/Pr2.proto"
+IMPORTABLE EXTERNPROTO "../protos/Pr2.proto"
 
 WorldInfo {
   basicTimeStep 16
@@ -22,7 +22,7 @@ TexturedBackgroundLight {
 Robot {
   children [
     Receiver {
-      channel 1
+      channel 2
       byteSize 256
     }
     Emitter {
@@ -82,15 +82,4 @@ DEF SUPERMARKET_ENV Group {
     }
   ]
 }
-DEF PR2_1 Pr2 {
-  translation 2 -12 0
-  name "pr2_1"
-  controller "marl_controller"
-  supervisor TRUE
-}
-DEF PR2_2 Pr2 {
-  translation -2 -12 0
-  name "pr2_2"
-  controller "marl_controller"
-  supervisor TRUE
-}
+DEF ROBOTS Group {}

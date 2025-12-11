@@ -4,6 +4,10 @@ from controller import Supervisor
 import random
 import json
 
+# World Size
+WORLD_WIDTH = 20
+WORLD_LENGTH = 30
+
 # Shelf Dimensions
 SHELF_HEIGHT = 2.5
 SHELF_WIDTH = 4
@@ -89,6 +93,9 @@ shelf_children = shelf_group.getField("children")
 
 product_group = supervisor.getFromDef("PRODUCTS")
 product_children = product_group.getField("children")
+
+robots_group = supervisor.getFromDef("ROBOTS")
+robots_children = robots_group.getField("children")
 
 def calculate_shelf_levels():
     shelf_spacing = (SHELF_HEIGHT - (SHELF_COUNT * SHELF_THICKNESS)) / SHELF_COUNT
@@ -182,6 +189,18 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
             shelf_num += 1
 
+def add_robots(robot_count):
+    for i in range(robot_count):
+        robot = (f'Pr2 {{ '
+                 f'translation {-(WORLD_WIDTH/2) + ((i+1)*3)}, -12, 0 '
+                 f'rotation 0 0 1 1.5708 '
+                 f'name "pr2_{i+1}" }} '
+                 f'controller "marl_controller" '
+                 f' }} '
+                 )
+
+        robots_children.importMFNodeFromString(-1, robot)
+
 def add_product_at_pos(product, position):
     prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '
             f'translation {position[0]} {position[1]} {position[2]} '
@@ -193,8 +212,11 @@ def add_product_at_pos(product, position):
 
 # Main Loop
 def run():
+    robot_count = 2
+
     calculate_shelf_levels()
     shelf_placement()
+    add_robots(robot_count)
 
     # Exporting supermarket data for qlearning
     output_file = "supermarket_data.json"
@@ -237,7 +259,8 @@ def run():
         global_broadcast = {
             "type" : "GLOBAL",
             "reward" : None,
-            "neighbour_positions" : None
+            "neighbour_positions" : None,
+            "inventory" : current_inventory,
         }
         emitter.send(json.dumps(global_broadcast))
 
