@@ -83,7 +83,11 @@ def a_star_path(start, goal):
                 active_node = came_from[active_node]
             path.append(start_node)
             path.reverse()
-            return path # Exit main while loop
+
+            path = smooth_path(path)
+            world_path = [supermarket_map.map_to_world(cell[0], cell[1]) for cell in path]
+
+            return world_path # Exit main while loop
 
         closed_set.add(active_node)
 

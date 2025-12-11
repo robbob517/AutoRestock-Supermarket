@@ -8,6 +8,7 @@ import a_star_search as pathfind
 import supermarket_map as map
 
 TIMESTEP = 16
+COOP_WEIGHTING = 0.7
 
 STATE_IDLE = 0
 STATE_PLANNING = 1
@@ -35,7 +36,8 @@ def run():
     global_reward = 0
 
     # Q learning variable init
-    agent = qlearn.PR2_qlearn_Agent(robot, TIMESTEP, 0.5)
+    agent = qlearn.PR2_qlearn_Agent(robot, TIMESTEP, COOP_WEIGHTING)
+
     target_item = None
     current_action_index = None
     last_state_tuple = None
@@ -70,9 +72,6 @@ def run():
         ground_position = robot_node.getPosition()
         current_x = ground_position[0]
         current_y = ground_position[1]
-
-        real_rotation = robot_node.getOrientation()
-        current_theta = np.arctan2(real_rotation[3], real_rotation[0])
 
         # Listen for server messages
         data = None
@@ -147,13 +146,10 @@ def run():
 
                 print(f"{robot_name}: Start Node -> Goal node: {start_node} -> {goal_node}")
 
-                raw_path = pathfind.a_star_path(start_node, goal_node)
-                path = pathfind.smooth_path(raw_path)
-                # print(f"{robot_name}: Raw path smoothing {len(raw_path)} -> {len(path)}")
+                path = pathfind.a_star_path(start_node, goal_node)
 
                 if path:
-                    world_path = [map.map_to_world(cell[0], cell[1]) for cell in path]
-                    instructions = pathfind.move_instructions(world_path)
+                    instructions = pathfind.move_instructions(path)
                     robot_state = STATE_MOVING
                 else:
                     print(f"{robot_name}: Path not found to {target_item}")
