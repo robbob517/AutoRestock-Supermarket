@@ -194,7 +194,7 @@ def add_robots(robot_count):
         robot = (f'Pr2 {{ '
                  f'translation {-(WORLD_WIDTH/2) + ((i+1)*3)}, -12, 0 '
                  f'rotation 0 0 1 1.5708 '
-                 f'name "pr2_{i+1}" }} '
+                 f'name "pr2_{i+1}" '
                  f'controller "marl_controller" '
                  f' }} '
                  )
