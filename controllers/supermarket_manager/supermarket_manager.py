@@ -177,10 +177,19 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
                     # Dictionary Structure
                     # Product name : {product_type : "type", empty_positions : [(x,y,z)], shelf_grid : (row, col), shelf_pos : (shelf_x, shelf_y)}
 
-                    product_position = (shelf_x, y_offset, z_level,)
+                    product_position = (shelf_x, y_offset, z_level)
                     shelves[product["name"]]["empty_positions"].append(product_position)
 
             shelf_num += 1
+
+def add_product_at_pos(product, position):
+    prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '
+            f'translation {position[0]} {position[1]} {position[2]} '
+            f'name "{product}" '
+            f' }} ')
+
+    product_children.importMFNodeFromString(-1, prod)
+    print(f"Adding product {product} at position {position}")
 
 # Main Loop
 def run():
@@ -211,9 +220,13 @@ def run():
             receiver.nextPacket()
 
             if data["type"] == "RESTOCK":
-                item = data["item"]
-                current_inventory[item] += 1
-                print(f"Robot restocked item {item}. New stock count {current_inventory[item]}")
+                product = data["item"]
+                position = data["position"]
+
+                add_product_at_pos(product, position)
+
+                current_inventory[product] += 1
+                print(f"Robot restocked product {product}, new stock count: {current_inventory[product]}")
 
         total_stock = sum(current_inventory.values())
 

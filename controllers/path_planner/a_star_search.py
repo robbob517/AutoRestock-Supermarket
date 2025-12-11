@@ -1,6 +1,6 @@
 import heapq
 import math
-from controllers.path_planner import supermarket_map as test_map
+from controllers.path_planner import supermarket_map
 
 # Function to calculate Manhattan Distance
 def heuristic(a, b):
@@ -13,7 +13,7 @@ def free_neighbors(node):
     result = []
     for dx, dy in steps:
         nx, ny = x+dx, y+dy
-        if 0 <= nx < test_map.MAP_SIZE and 0 <= ny < test_map.MAP_SIZE and test_map.og[nx][ny]==1:
+        if 0 <= nx < supermarket_map.MAP_SIZE and 0 <= ny < supermarket_map.MAP_SIZE and supermarket_map.og[nx][ny]==1:
             result.append((nx, ny))
     return result
 
@@ -25,8 +25,8 @@ def calc_f_cost(current_node, goal, g_cost):
 def get_nearest_walkable_node(target_node):#
     target_x, target_y = target_node
 
-    if 0 <= target_x < test_map.MAP_SIZE and 0 <= target_y < test_map.MAP_SIZE:
-        if test_map.og[target_x][target_y] == 1:
+    if 0 <= target_x < supermarket_map.MAP_SIZE and 0 <= target_y < supermarket_map.MAP_SIZE:
+        if supermarket_map.og[target_x][target_y] == 1:
             return target_node
 
     queue = [target_node]
@@ -34,8 +34,8 @@ def get_nearest_walkable_node(target_node):#
 
     while queue:
         current_x, current_y = queue.pop(0)
-        if 0 <= current_x < test_map.MAP_SIZE and 0 <= current_y < test_map.MAP_SIZE:
-            if test_map.og[current_x][current_y] == 1:
+        if 0 <= current_x < supermarket_map.MAP_SIZE and 0 <= current_y < supermarket_map.MAP_SIZE:
+            if supermarket_map.og[current_x][current_y] == 1:
                 return (current_x, current_y)
 
         steps = [(-1,0),(1,0),(0,-1),(0,1)]
@@ -50,10 +50,11 @@ def get_nearest_walkable_node(target_node):#
 
 # Main function to find and construct a map from start node to goal node
 def a_star_path(start, goal):
-    start_node = test_map.world_to_map(start[0], start[1])
-    raw_goal_node = test_map.world_to_map(goal[0], goal[1])
+    start_node = supermarket_map.world_to_map(start[0], start[1])
+    raw_goal_node = supermarket_map.world_to_map(goal[0], goal[1])
 
     goal_node = get_nearest_walkable_node(raw_goal_node)
+    goal = supermarket_map.map_to_world(goal_node[0], goal_node[1])
 
     # print(f"\nStart Node: {start_node}")
     # print(f"Old goal: {raw_goal_node}, New goal: {goal_node}\n")
@@ -131,4 +132,28 @@ def move_instructions(world_path):
 
         instructions.append((target_dir, x_next, y_next))
     return instructions
+
+def smooth_path(path):
+    if not path or len(path) < 3:
+        return path
+
+    simplified_path = [path[0]]
+    direction_old = (
+        path[1][0] - path[0][0],
+        path[1][1] - path[0][1]
+    )
+
+    for i in range(2, len(path)):
+        direction_new = (
+            path[i][0] - path[i - 1][0],
+            path[i][1] - path[i - 1][1]
+        )
+
+        if direction_new != direction_old:
+            simplified_path.append(path[i-1])
+            direction_old = direction_new
+
+    simplified_path.append(path[-1])
+    return simplified_path
+
 

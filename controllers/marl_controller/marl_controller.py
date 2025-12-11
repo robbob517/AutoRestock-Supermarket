@@ -15,6 +15,7 @@ import numpy as np
 from controllers.path_planner import odometry, a_star_search, supermarket_map
 from controllers import pr2_qlearn_agent as qlearn
 from controllers import pr2_controller as pr2
+from controller import Supervisor
 
 TIMESTEP = 16
 
@@ -36,11 +37,13 @@ def run():
     pr2.set_initial_position()
 
     # Initialise path planning (from path_planner.py)
-    if robot_name == "pr2_1":
-        current_x, current_y, current_theta = 2, -12, 0
-    else:
-        current_x, current_y, current_theta = -2, -12, 0
-    prev_wheels_angle = np.zeros(8)
+    # if robot_name == "pr2_1":
+    #     current_x, current_y, current_theta = 2, -12, 0
+    # else:
+    #     current_x, current_y, current_theta = -2, -12, 0
+    # prev_wheels_angle = np.zeros(8)
+
+    robot_node = robot.getFromDef(robot_name.upper())
 
     current_path = []
     path_index = 0
@@ -59,8 +62,16 @@ def run():
     while robot.step(TIMESTEP) != -1:
 
         # Update Odometry
-        delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = odometry.calc_odometry(
-            current_x, current_y, current_theta, prev_wheels_angle)
+        # delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = odometry.calc_odometry(
+        #     current_x, current_y, current_theta, prev_wheels_angle)
+
+        # Nothing used other than current_x and current_y?
+
+
+        # Ground-truth position data
+        position = robot_node.getPosition()
+        current_x = position[0]
+        current_y = position[1]
 
         # Listen for server msgs
         server_data = None
@@ -118,7 +129,8 @@ def run():
 
             print(f"{robot_name}: Start Node -> Goal node: {start_node} -> {goal_node}")
 
-            path = a_star_search.a_star_path(start_node, goal_node)
+            raw_path = a_star_search.a_star_path(start_node, goal_node)
+            path = a_star_search.smooth_path(raw_path)
 
             if path:
                 world_path = [supermarket_map.map_to_world(cell[0], cell[1]) for cell in path]
@@ -130,7 +142,7 @@ def run():
 
         # Move to goal
         elif robot_state == STATE_MOVING:
-            # Reached end of instructions (at goal?)
+            # Reached end of instructions
             if path_index >= len(instructions):
                 pr2.set_wheels_speed(0)
                 path_index = 0
@@ -151,7 +163,7 @@ def run():
                 distance = abs(target_x - current_x)
 
             if distance > 0.01:
-                pr2.set_wheels_speed(3)
+                pr2.set_wheels_speed(pr2.MAX_WHEEL_SPEED)
                 # If target_dir is left, right means robot needs to turn
             else:
                 pr2.set_wheels_speed(0)
@@ -163,6 +175,7 @@ def run():
                 "type" : "RESTOCK",
                 "robot_id" : robot_name,
                 "item" : target_item,
+                "position": target_coords,
             }
             emitter.send(json.dumps(msg))
 
