@@ -1,3 +1,5 @@
+import json
+
 import pr2_controller as pr2
 import pr2_qlearn_agent as qlearn
 import odometry as od
@@ -24,11 +26,19 @@ def run():
 
     robot_state = STATE_IDLE
 
+    # Items that robot is holding (logical)
+    robot_stock = 0
 
+    neighbour_positions = {}
 
     while robot.step(TIMESTEP) != -1:
 
         # Update required variables per timestep
+
+        # Listen for server messages
+        while receiver.getQueueLength() > 0:
+            msg = receiver.getString()
+            data = json.loads(msg)
 
 
         # Marl Loop
@@ -44,7 +54,7 @@ def run():
         elif robot_state == STATE_MOVING:
             pass
 
-        # Return to storage area to refill local inventory
+        # Return to storage area to refill robot's inventory
         elif robot_state == STATE_REFILLING:
             pass
 

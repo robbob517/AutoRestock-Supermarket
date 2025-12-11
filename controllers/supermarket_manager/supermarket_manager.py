@@ -175,7 +175,7 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
                 else:   # Add empty item slot to dictionary
                     # Dictionary Structure
-                    # Product name : {product_type : "type", empty_positions : [(x,y,z)], shelf_grid : (row, col), shelf_pos : (shelf_x, shelf_y)}
+                    # Product name : {product_type : { empty_positions : [(x,y,z)], shelf_grid : (row, col), shelf_pos : (shelf_x, shelf_y) } }
 
                     product_position = (shelf_x, y_offset, z_level)
                     shelves[product["name"]]["empty_positions"].append(product_position)
@@ -207,10 +207,38 @@ def run():
     receiver = supervisor.getDevice("receiver")
     receiver.enable(TIMESTEP)
 
+    robots_positions = {}
 
+    # Current inventory structure, { Item Name : Current stock of item }
+    current_inventory = {product["name"] : (ITEMS_PER_SHELF - len(shelves[product["name"]]["empty_positions"])) for
+                         product in PRODUCTS.values()}
+
+    while supervisor.step(TIMESTEP) != -1:
+
+        # Check for messages from robots
+        while receiver.getQueueLength() > 0:
+            message = receiver.getString()
+            data = json.loads(message)
+
+            # Data format, {Type : { robot_id : id, position : pos} }
+            if data["type"] == "UPDATE_POS":
+                pass
+
+            # Data format, {Type : { robot_id : id, item_name : name, item_position : pos } }
+            elif data["type"] == "RESTOCKING":
+                pass
+
+            receiver.nextPacket()
+
+        # Calculate rewards
+
+
+        # Send messages to robots
+        global_broadcast = {
+            "type" : "GLOBAL",
+            "reward" : None,
+            "neighbour_positions" : None
+        }
+        emitter.send(json.dumps(global_broadcast))
 
 run()
-
-# Checking number of empty slots
-# for x, y in empty_slots.items():
-#     print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")

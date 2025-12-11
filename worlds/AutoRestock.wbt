@@ -22,7 +22,7 @@ TexturedBackgroundLight {
 Robot {
   children [
     Receiver {
-      channel 2
+      channel 1
       byteSize 256
     }
     Emitter {
