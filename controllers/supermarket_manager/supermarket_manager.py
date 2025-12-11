@@ -203,18 +203,15 @@ def add_robots(robot_count):
         robots_children.importMFNodeFromString(-1, robot)
 
 def add_product_at_pos(product, position):
-    z_level = 0.1
-    for pos in shelves[product]["empty_positions"]:
-        if pos[0] == position[0] and pos[1] == position[1]:
-            z_level = pos[2]
+    pos_x, pos_y, pos_z = position
 
     prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '
-            f'translation {position[0]} {position[1]} {z_level + 0.1} '
+            f'translation {pos_x} {pos_y} {pos_z} '
             f'name "{product}" '
             f' }} ')
 
     product_children.importMFNodeFromString(-1, prod)
-    print(f"Supervisor: Added product {product} at position: ({position[0]}, {position[1]}, {z_level})")
+    print(f"Supervisor: Added product {product} at position {position}")
 
 # Main Loop
 def run():
@@ -253,22 +250,21 @@ def run():
 
             # Data format, {Type : type, robot_id : id, position : pos, orientation : d}
             if data["type"] == "UPDATE_POS":
-                robots_positions[data["robot_id"]] = { "position" : data["position"], "orientation" : data["orientation"], "state" : data["state"] }
-                # print(f"Server: Received position update for {data['robot_id']} at position {data['position']} with orientation {data['orientation']}")
+                robots_positions[data["robot_id"]] = { "position" : data["position"], "orientation" : data["orientation"] }
+                # print(f"Server: Received position update for {data['robot_id']} at position {data['position']}")
 
             # Data format, {Type : type, robot_id : id, item_name : name, item_position : pos }
             elif data["type"] == "RESTOCKING":
                 product = data["item_name"]
-                product_position = data["item_pos"]
+                product_position = data["position"]
                 current_inventory[product] += 1
 
                 add_product_at_pos(product, product_position)
-                print(f"Server: Received inventory for {product} at position {data['item_pos']}")
+                print(f"Server: Received inventory for {product} at position {data['position']}")
 
             receiver.nextPacket()
 
         # Calculate rewards
-        global_reward = sum(current_inventory.values())
 
         # Send messages to robots
         global_broadcast = {
