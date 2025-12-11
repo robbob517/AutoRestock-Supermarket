@@ -133,7 +133,7 @@ def shelf_placement():
 
         east_facing = False
 
-    print("Shelves placed and products placed")
+    print("Supervisor: Shelves placed and products placed")
 
 def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
@@ -211,7 +211,7 @@ def add_product_at_pos(product, position):
             f' }} ')
 
     product_children.importMFNodeFromString(-1, prod)
-    print(f"Adding product {product} at position {position}")
+    print(f"Supervisor: Added product {product} at position {position}")
 
 # Main Loop
 def run():
@@ -223,10 +223,10 @@ def run():
 
     # Exporting supermarket data for qlearning
     output_file = "supermarket_data.json"
-    print(f"Exporting {len(shelves)} products to {output_file}...")
+    print(f"Server: Exporting {len(shelves)} products to {output_file}...")
     with open(output_file, "w") as f:
         json.dump(shelves, f, indent=4)
-    print("Export complete.")
+    print("Server: Export complete.")
 
     emitter = supervisor.getDevice("emitter")
     receiver = supervisor.getDevice("receiver")
