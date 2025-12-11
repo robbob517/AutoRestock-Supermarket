@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from controllers import pr2_controller as pr2
+from controllers.marl_controller import pr2_controller as pr2
 
 # PR2 constants
 WHEELS_DISTANCE = 0.4492

@@ -1,14 +1,6 @@
-from controller import Robot
 import numpy as np
-import math
-import time
-import signal
-import sys
 import helper
-import random
-import odometry
-import heapq
-import a_star_search
+from controllers.marl_controller import odometry, a_star_search
 import particle_filtering
 import test_map
 
@@ -121,7 +113,7 @@ while helper.robot.step(TIME_STEP) != -1:
 
 
     # Update odometry
-    delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x,y,theta,prev_wheels_angle)
+    delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x, y, theta, prev_wheels_angle)
     print("x: ", x, "y: ", y, "theta: ", theta)
 
     # Particle Filter
