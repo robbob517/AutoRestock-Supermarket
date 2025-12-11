@@ -62,7 +62,7 @@ def a_star_path(start, goal):
     # print(f"\nStart Node: {start_node}")
     # print(f"Old goal: {raw_goal_node}, New goal: {goal_node}\n")
 
-    if goal_node is None:
+    if start_node is None or goal_node is None:
         return None
 
     open_set = []
