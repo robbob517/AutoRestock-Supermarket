@@ -142,6 +142,7 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
         product_w = PLACEHOLDER_PRODUCT["w"] # Width of product
 
         shelf_num = 0
+        item_index = 0
 
         if product["name"] not in shelves: # Initialise dict for current shelf
             shelves[product["name"]] = {"product_type" : PRODUCTS[shelf_pos]["type"],
@@ -151,8 +152,6 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
                                         }
 
         for z_level in SHELF_LEVELS:
-            item_index = 0
-            shelf_num %= SHELF_COUNT
             z_level = round(z_level + 0.1, 2) # Raise product slightly to avoid clipping with shelf when loading
 
             for i in range(ITEMS_PER_ROW):
@@ -172,6 +171,7 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
                             f' }} ')
 
                     product_children.importMFNodeFromString(-1, prod)
+                    item_index += 1
 
                 else:   # Add empty item slot to dictionary
                     # Dictionary Structure
@@ -180,7 +180,6 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
                     product_position = (shelf_x, y_offset, z_level,)
                     shelves[product["name"]]["empty_positions"].append(product_position)
 
-                item_index += 1
             shelf_num += 1
 
 # Main Loop
