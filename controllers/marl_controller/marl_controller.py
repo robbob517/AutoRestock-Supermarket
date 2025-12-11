@@ -5,7 +5,6 @@ import pr2_controller as pr2
 import pr2_qlearn_agent as qlearn
 import odometry as od
 import a_star_search as pathfind
-import supermarket_map as map
 
 TIMESTEP = 16
 COOP_WEIGHTING = 0.7
@@ -15,6 +14,24 @@ STATE_PLANNING = 1
 STATE_MOVING = 2
 STATE_REFILLING = 3
 STATE_RESTOCKING = 4
+
+def rotation_snap(robot_node):
+    rotation_field = robot_node.getField("rotation")
+    current_rotation = rotation_field.getSFRotation()
+
+    z_axis = current_rotation[2]
+    raw_yaw = current_rotation[3]
+
+    if z_axis < 0:
+        current_yaw = -raw_yaw
+    else:
+        current_yaw = raw_yaw
+
+    snapped_yaw = round(current_yaw / (np.pi / 2)) * (np.pi / 2)
+
+    rotation_field.setSFRotation([0, 0, 1, snapped_yaw])
+
+    robot_node.resetPhysics()
 
 def run():
     robot = pr2.robot
@@ -91,6 +108,7 @@ def run():
                         "robot_id" : robot_name,
                         "position" : (current_x, current_y),
                         "orientation" : current_orientation,
+                        "state" : robot_state,
                         }
         emitter.send(json.dumps(robot_update))
 
@@ -111,8 +129,6 @@ def run():
 
             last_state_tuple = None
             current_action_index = None
-
-            print(f"{robot_name}: Updated Q-learning")
 
         # Marl Loop
         # Choose a new action
@@ -139,7 +155,7 @@ def run():
         # Calculating path to goal position
         elif robot_state == STATE_PLANNING:
             origin_x, origin_y = origin
-            if (round(current_x), round(current_y)) == (round(origin_x), round(origin_y)) and robot_stock == 0:
+            if (np.sqrt((current_x - origin_x) ** 2 + (current_y - origin_y) ** 2) < 1) and robot_stock == 0:
                 robot_state = STATE_REFILLING
             else:
                 start_node = (current_x, current_y)
@@ -161,15 +177,39 @@ def run():
             if path_index >= len(instructions):
                 pr2.set_wheels_speed(0)
                 path_index = 0
-                robot_state = STATE_RESTOCKING
+                if robot_stock > 0:
+                    robot_state = STATE_RESTOCKING
+                else:
+                    robot_state = STATE_REFILLING
                 continue
 
             target_dir, target_x, target_y = instructions[path_index]
+
+            # Basic collision avoidance with other robots (Waits while other robot is in its goal node)
+            path_blocked = False
+            for other_robot in other_robots.keys():
+                if other_robot != robot_name:
+                    # Calculate distance of other robot to current robot's goal node
+                    other_dist = np.sqrt((target_x - other_robots[other_robot]['position'][0]) ** 2 + (target_y - other_robots[other_robot]['position'][1]) ** 2)
+
+                    # Calculate distance of current robot to goal node
+                    current_dist = np.sqrt((target_x - current_x) ** 2 + (target_y - current_y) ** 2)
+
+                    if other_dist < 1.5 and current_dist < 2:
+                        path_blocked = True
+                        break
+
+            if path_blocked:
+                pr2.set_wheels_speed(0)
+                continue
 
             angle_to_turn = pathfind.get_rotation(current_orientation, target_dir)
             if abs(angle_to_turn) > 1e-3:
                 pr2.set_wheels_speed(0)
                 pr2.robot_rotate(angle_to_turn)
+
+                rotation_snap(robot_node)
+
                 current_orientation = target_dir
 
             if target_dir in ['up', 'down']:
@@ -178,7 +218,7 @@ def run():
                 distance = abs(target_x - current_x)
 
             if distance > 0.01:
-                pr2.set_wheels_speed(3)
+                pr2.set_wheels_speed(pr2.MAX_WHEEL_SPEED)
                 # If target_dir is left, right means robot needs to turn
             else:
                 pr2.set_wheels_speed(0)
@@ -187,7 +227,7 @@ def run():
         # Return to storage area to refill robot's inventory
         elif robot_state == STATE_REFILLING:
             previous_stock = robot_stock
-            robot_stock = 5
+            robot_stock = 2
 
             print(f"{robot_name}: Stock refilled from {previous_stock} to {robot_stock}")
 
@@ -202,6 +242,7 @@ def run():
                 "item_name" : target_item,
                 "item_pos" : target_coords,
             }
+            emitter.send(json.dumps(restock_msg))
             robot_stock -= 1
             robot_state = STATE_IDLE
 
