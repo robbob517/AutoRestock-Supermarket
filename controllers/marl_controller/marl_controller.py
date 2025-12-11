@@ -125,6 +125,7 @@ def run():
                 instructions = a_star_search.move_instructions(world_path)
                 robot_state = STATE_MOVING
             else:
+                print(f"{robot_name}: Unable to find path to item {target_item}")
                 robot_state = STATE_IDLE
 
         # Move to goal
