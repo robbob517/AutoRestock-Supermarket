@@ -32,7 +32,7 @@ def run():
 
     # Items that robot is holding (logical)
     robot_stock = 0
-    neighbour_positions = {}
+    other_robots = {}
     global_reward = 0
 
     # Q learning variable init
@@ -81,7 +81,7 @@ def run():
 
             if data["type"] == "GLOBAL":
                 global_reward = data["reward"]
-                neighbour_positions = data["robots_positions"]
+                other_robots = data["robots_positions"]
                 previous_inventory = data["inventory"]
 
             receiver.nextPacket()
@@ -90,6 +90,7 @@ def run():
         robot_update = {"type" : "UPDATE_POS",
                         "robot_id" : robot_name,
                         "position" : (current_x, current_y),
+                        "orientation" : current_orientation,
                         }
         emitter.send(json.dumps(robot_update))
 

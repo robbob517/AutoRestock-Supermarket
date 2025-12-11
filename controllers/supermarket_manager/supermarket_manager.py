@@ -232,11 +232,12 @@ def run():
     receiver = supervisor.getDevice("receiver")
     receiver.enable(TIMESTEP)
 
-    robots_positions = {}
-
     # Current inventory structure, { Item Name : Current stock of item }
     current_inventory = {product["name"] : (ITEMS_PER_SHELF - len(shelves[product["name"]]["empty_positions"])) for
                          product in PRODUCTS.values()}
+
+    # Robot positions structure, { robot_name : { position : pos, orientation : o } }
+    robots_positions = {}
 
     global_reward = 0
 
@@ -247,9 +248,9 @@ def run():
             message = receiver.getString()
             data = json.loads(message)
 
-            # Data format, {Type : type, robot_id : id, position : pos}
+            # Data format, {Type : type, robot_id : id, position : pos, orientation : d}
             if data["type"] == "UPDATE_POS":
-                robots_positions[data["robot_id"]] = data["position"]
+                robots_positions[data["robot_id"]] = { "position" : data["position"], "orientation" : data["orientation"] }
                 # print(f"Server: Received position update for {data['robot_id']} at position {data['position']}")
 
             # Data format, {Type : type, robot_id : id, item_name : name, item_position : pos }
