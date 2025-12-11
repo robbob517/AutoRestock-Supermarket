@@ -1,17 +1,17 @@
 import numpy as np
-from controller import Robot
+from controller import Robot, Supervisor
 import math
 import sys
 
 TIME_STEP = 16
 
-MAX_WHEEL_SPEED = 3.0
+MAX_WHEEL_SPEED = 4
 WHEELS_DISTANCE = 0.4492
 SUB_WHEELS_DISTANCE = 0.098
 WHEEL_RADIUS = 0.08
 
 KP_GAIN = 0.05
-ANGLE_TOLERANCE_RAD = np.deg2rad(1.0)
+ANGLE_TOLERANCE_RAD = np.deg2rad(0.1)
 MIN_SPEED = 0.5
 
 TOLERANCE = 0.05
@@ -24,7 +24,8 @@ FL_ROTATION, FR_ROTATION, BL_ROTATION, BR_ROTATION = range(4)
 SHOULDER_ROLL, SHOULDER_LIFT, UPPER_ARM_ROLL, ELBOW_LIFT, WRIST_ROLL = range(5)
 LEFT_FINGER, RIGHT_FINGER = 0, 1
 
-robot = Robot()
+# robot = Robot()
+robot = Supervisor()
 
 wheel_motors = [None] * 8
 wheel_sensors = [None] * 8
@@ -59,7 +60,6 @@ base_laser = None
 def step():
     if robot.step(TIME_STEP) == -1:
         sys.exit(0)
-
 
 def initialize_devices():
     global left_finger_motor, left_finger_sensor
