@@ -42,7 +42,7 @@ def get_nearest_walkable_node(target_node):#
         for dx, dy in steps:
             nx, ny = current_x + dx, current_y + dy
             if (nx, ny) not in visited:
-                if abs(nx - target_x) + abs(ny - target_y) < 10:
+                if abs(nx - target_x) + abs(ny - target_y) < 20:
                     queue.append((nx, ny))
                     visited.add((nx, ny))
 
