@@ -1,4 +1,6 @@
 import json
+import math
+
 import numpy as np
 
 import pr2_controller as pr2
@@ -32,6 +34,21 @@ def rotation_snap(robot_node):
     rotation_field.setSFRotation([0, 0, 1, snapped_yaw])
 
     robot_node.resetPhysics()
+
+def in_corridor(current_pos, target_pos, other_pos, corridor_width=0.8):
+    cx, cy = current_pos
+    tx, ty = target_pos
+    ox, oy = other_pos
+
+    min_x = min(cx, tx) - corridor_width / 2
+    max_x = max(cx, tx) + corridor_width / 2
+    min_y = min(cy, ty) - corridor_width / 2
+    max_y = max(cy, ty) + corridor_width / 2
+
+    in_x_bounds = min_x < ox < max_x
+    in_y_bounds = min_y < oy < max_y
+
+    return in_x_bounds and in_y_bounds
 
 def run():
     robot = pr2.robot
@@ -185,19 +202,42 @@ def run():
 
             target_dir, target_x, target_y = instructions[path_index]
 
-            # Basic collision avoidance with other robots (Waits while other robot is in its goal node)
+            # Collision Avoidance
+
+            # Virtual collision bounding box
+            look_ahead = 2
+
+            dx, dy = 0, 0
+            if current_orientation == 'up': dy = 1
+            elif current_orientation == 'down': dy = -1
+            elif current_orientation == 'left': dx = -1
+            elif current_orientation == 'right': dx = 1
+
+            target_distance = np.sqrt((target_x - current_x) ** 2 + (target_y - current_y) ** 2)
+            check_dist = min(look_ahead, target_distance)
+
+            virtual_target_x = current_x + (dx * check_dist)
+            virtual_target_y = current_y + (dy * check_dist)
+
+            # Avoidance
             path_blocked = False
-            for other_robot in other_robots.keys():
-                if other_robot != robot_name:
-                    # Calculate distance of other robot to current robot's goal node
-                    other_dist = np.sqrt((target_x - other_robots[other_robot]['position'][0]) ** 2 + (target_y - other_robots[other_robot]['position'][1]) ** 2)
+            critical_distance = 0.6
+            for other_robot_id, other_data in other_robots.items():
+                if other_robot_id == robot_name:
+                    continue
 
-                    # Calculate distance of current robot to goal node
-                    current_dist = np.sqrt((target_x - current_x) ** 2 + (target_y - current_y) ** 2)
+                ox, oy = other_data["position"]
+                distance = np.sqrt((current_x - ox) ** 2 + (current_y - oy) ** 2)
 
-                    if other_dist < 1.5 and current_dist < 2:
-                        path_blocked = True
-                        break
+                # Creates corridor of area to check
+                if in_corridor((current_x, current_y), (virtual_target_x, virtual_target_y), other_data["position"]):
+                    path_blocked = True
+                    break
+
+                # Imminent Crash
+                if distance < critical_distance:
+                    path_blocked = True
+                    break
 
             if path_blocked:
                 pr2.set_wheels_speed(0)
