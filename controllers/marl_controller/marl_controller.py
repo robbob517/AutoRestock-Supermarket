@@ -205,7 +205,7 @@ def run():
             # Collision Avoidance
 
             # Virtual collision bounding box
-            look_ahead = 2
+            look_ahead = 1.5
 
             dx, dy = 0, 0
             if current_orientation == 'up': dy = 1
