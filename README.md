@@ -42,6 +42,10 @@ The robot operates in a closed loop:
     * Generates the random shelf layout.
     * Calculates item coordinates and exports `supermarket_data.json`.
     * Manages the virtual inventory logic.
+* **`path_planner.py`**
+    * Generate the optimum path and instructions using A* search, for robot to follow.
+    * use odometry and particle filetring for robot pose estimator
+    * use pr2 robot builtin functions i.e "set_wheels_speed()", "robot_rotate()" to move robot forward and turn it
 
 ### `data/` (Generated at Runtime)
 * `supermarket_data.json`: The live map of where items are located.
@@ -61,4 +65,4 @@ The robot operates in a closed loop:
 ## Authors
 * **Rayyan Syed:** Q-Learning Logic 
 * **Robert Choi:** Environment Design & Multi-Agent Coordination
-* **Ahmed Alam:** Odometry 
+* **Ahmed Alam:** Odometry & A* Search
