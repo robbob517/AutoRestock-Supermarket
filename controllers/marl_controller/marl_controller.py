@@ -310,7 +310,7 @@ def run():
         # Return to storage area to refill robot's inventory
         elif robot_state == STATE_REFILLING:
             previous_stock = robot_stock
-            robot_stock = 2
+            robot_stock = 5
 
             print(f"{robot_name}: Stock refilled from {previous_stock} to {robot_stock}")
 
