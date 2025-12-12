@@ -37,7 +37,7 @@ def map_to_world(mx, my):
     wy = (my - MAP_ORIGIN) * MAP_RES
     return wx, wy
 
-def add_object(center_x, center_y, size_x, size_y, margin = 0.6):
+def update_object(center_x, center_y, size_x, size_y, margin = 0.6, occupied=True):
 
     start_x_m = center_x - (size_x / 2) - margin
     end_x_m = center_x + (size_x / 2) + margin
@@ -48,21 +48,24 @@ def add_object(center_x, center_y, size_x, size_y, margin = 0.6):
     x1, y1 = world_to_map(start_x_m, start_y_m)
     x2, y2 = world_to_map(end_x_m, end_y_m)
 
-    og[x1:x2, y1:y2] = OCCUPIED
+    if occupied:
+        og[x1:x2, y1:y2] = OCCUPIED
+    else:
+        og[x1:x2, y1:y2] = FREE
 
 # Bounding Walls
-add_object(-10, 0, 0.2, 30) # East Wall
-add_object(10, 0, 0.2, 30) # West Wall
-add_object(0, 14.9, 20, 0.2) # North Wall
-add_object(0, -14.9, 20, 0.2) # South Wall
-add_object(-5.65, -8, 8.5, 0.2) # Storage Divider Right
-add_object(5.65, -8, 8.5, 0.2) # Storage Divider Left
+update_object(-10, 0, 0.2, 30) # East Wall
+update_object(10, 0, 0.2, 30) # West Wall
+update_object(0, 14.9, 20, 0.2) # North Wall
+update_object(0, -14.9, 20, 0.2) # South Wall
+update_object(-5.65, -8, 8.5, 0.2) # Storage Divider Right
+update_object(5.65, -8, 8.5, 0.2) # Storage Divider Left
 
 for row in range(ROWS):
     for col in range(COLUMNS):
         current_x = START_X + (row * SHELF_DEPTH) + ((row // 2) * AISLE_WIDTH)
         current_y = START_Y + (col * (SHELF_WIDTH + SHELF_SPACING))
 
-        add_object(current_x, current_y, SHELF_DEPTH, SHELF_WIDTH, 0.8)
+        update_object(current_x, current_y, SHELF_DEPTH, SHELF_WIDTH, 0.8)
 
 
