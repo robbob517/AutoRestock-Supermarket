@@ -53,7 +53,7 @@ def in_corridor(current_pos, target_pos, other_pos, corridor_width=0.8):
 
 def temp_map_update(obstacles, occupied=True):
     for ox, oy in obstacles:
-        map.update_object(ox, oy, 0.6, 0.6, 0.6, occupied)
+        map.update_object(ox, oy, 0.6, 0.6, 0.8, occupied)
 
 def run():
     robot = pr2.robot
@@ -110,13 +110,13 @@ def run():
         #     print(f"{robot_name}: Estimated position: {current_x}, {current_y}")
 
         # Odometry
-        # delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = od.calc_odometry(
-        #     current_x, current_y, current_theta, prev_wheels_angle)
+        delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = od.calc_odometry(
+            current_x, current_y, current_theta, prev_wheels_angle)
 
         # Ground Truth for position
-        ground_position = robot_node.getPosition()
-        current_x = ground_position[0]
-        current_y = ground_position[1]
+        # ground_position = robot_node.getPosition()
+        # current_x = ground_position[0]
+        # current_y = ground_position[1]
 
         # Listen for server messages
         data = None
