@@ -21,20 +21,21 @@ TIME_STEP = 16
 num_particles = 200
 
 # Odometry
-prev_wheels_angle = np.zeros(8)
-delta_trans, delta_rot, x, y, theta = 0.0, 0.0, -3.0, -12.0, 0.0
+# prev_wheels_angle = np.zeros(8)
+# delta_trans, delta_rot, x, y, theta = 0.0, 0.0, -3.0, -12.0, 0.0
 total_distance = 0
 
 # Lidar
-#lidar = helper.base_laser
+# lidar = helper.base_laser
 Z_HIT = 0.95
 Z_RAND = 0.05
-SIGMA = 0.2     # noise in meters
+SIGMA = 0.2  # noise in meters
 
 # Function to display particles on webots world in realtime
 root = helper.robot.getRoot()
 children_field = root.getField("children")
 particle_nodes = []
+
 
 def draw_particles(particles):
     global particle_nodes
@@ -48,7 +49,7 @@ def draw_particles(particles):
         x, z = p["x"], p["y"]
         # Color by weight (optional)
         weight = p.get("weight", 0.05)
-        color = (1.0, max(0, 1 - weight*5), 0)  # brighter red for higher weight
+        color = (1.0, max(0, 1 - weight * 5), 0)  # brighter red for higher weight
         particle_str = f"""
         Transform {{
             translation {x} 0.05 {z}
@@ -67,23 +68,99 @@ def draw_particles(particles):
         particle_nodes.append(index)
 
 
-
 "Initialising the devices"
 helper.initialize_devices()
 helper.enable_devices()
 helper.set_initial_position()
 
-start = (-3, -12)
-goal = None
-path_index = 0
-current_orientation = 'up'
-target_orientation = None
-goal_commands = [(0.25, 10), (-4.2, 1), (0, 4), (-2, -4.2), (4, 4)]#, (-1, 0), (4.2, -3), (-4, 2), (1, 1), (-3, -4)]
+# start = (-3, -12)
+# goal = None
+# path_index = 0
+# current_orientation = 'up'
+# target_orientation = None
+goal_commands = [(0.25, 10), (-4.2, 1), (0, 4), (-2, -4.2), (4, 4)]  # , (-1, 0), (4.2, -3), (-4, 2), (1, 1), (-3, -4)]
 command_index = 0
 
 particles = particle_filtering.initialize_particle(test_map.og, num_particles, (0, 0, 0))
 print(test_map.og)
 
+
+def robot_move(start, goal, current_orientation, x, y, theta, prev_wheels_angle):
+    path_index = 0
+    path = None
+    instructions = None
+    while helper.robot.step(TIME_STEP) != -1:
+        if path is None:
+            print("Goal:", goal)
+            goal_x, goal_y = test_map.world_to_map(goal[0], goal[1])
+
+            if test_map.og[(goal_x + 20), goal_y] == 1:
+                goal_x = (goal_x + 20)
+            else:
+                goal_x = (goal_x - 20)
+            new_goal = [goal_x, goal_y]
+            print("Start", start)
+            print(test_map.og[new_goal[0], new_goal[1]])
+            new_goal = test_map.map_to_world(new_goal[0], new_goal[1])
+            print("New Goal:", new_goal)
+            # Path finder to the goal node
+            path = a_star_search.a_star_path(start, new_goal)
+            world_path = [test_map.map_to_world(cell[0], cell[1]) for cell in path]
+            # print(world_path)
+            # Obtain move instructions for the robot  according to path
+            instructions = a_star_search.move_instructions(world_path)
+            print("length: ", len(instructions))
+            print(instructions)
+            # print(instructions)
+
+        # lidar = helper.base_laser.getRangeImage()
+        '''
+        if lidar[len(lidar) // 2] <= 0.3:
+            helper.set_wheels_speed(0)
+
+            delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x, y, theta,
+                                                                                                prev_wheels_angle)
+            start = [x, y]
+        '''
+        # Update odometry
+        delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x, y, theta, prev_wheels_angle)
+        print("x: ", x, "y: ", y, "theta: ", theta)
+
+        # Main algorithm for robot movement
+        if path_index >= len(instructions):
+            helper.set_wheels_speed(0)
+            print("Reached goal!", goal)
+            start = goal
+            return start, x, y, theta, prev_wheels_angle, current_orientation
+
+        target_dir, target_x, target_y = instructions[path_index]
+        # print("target_dir: ", target_dir, "target_x: ", target_x, "target_y: ", target_y)
+
+        # Rotate robot according to target direction
+        angle_to_turn = a_star_search.get_rotation(current_orientation, target_dir)
+        if abs(angle_to_turn) > 1e-3:
+            helper.set_wheels_speed(0)
+            helper.robot_rotate(angle_to_turn)  # blocking call, rotates robot
+            current_orientation = target_dir
+
+        #  Move robot forward
+        if target_dir in ['up', 'down']:
+            distance = abs(target_x - x)
+        else:
+            distance = abs(target_y - y)
+
+        if distance > 0.01:
+            helper.set_wheels_speed(3)
+        # If target_dir is left, right means robot needs to turn
+        else:
+            helper.set_wheels_speed(0)
+            path_index += 1
+            # print("Path Index: ", path_index)
+            # print("path_index: ", path_index)
+    return start, x, y, theta, prev_wheels_angle, current_orientation
+
+
+'''
 while helper.robot.step(TIME_STEP) != -1:
 
     # Check for new goal nodes when reached to the previous one
@@ -93,13 +170,13 @@ while helper.robot.step(TIME_STEP) != -1:
             exit(-1)
         goal = goal_commands[command_index]
         command_index += 1
-        '''
+
         goal_input = input("Enter goal node x and y or exit: ")
         if goal_input.lower() == "exit":
             print("Exiting program.")
             exit(-1)
         goal = tuple(map(int, goal_input.split()))
-        '''
+
         print("Goal:", goal)
         print("Start", start)
         # Path finder to the goal node
@@ -120,12 +197,22 @@ while helper.robot.step(TIME_STEP) != -1:
         '''
 
 
+        lidar = helper.base_laser.getRangeImage()
+        if lidar[len(lidar) // 2] <= 0.3:
+            helper.set_wheels_speed(0)
+
+            delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x, y, theta,
+                                                                                            prev_wheels_angle)
+            start = [x, y]
+
+
+
     # Update odometry
     delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x,y,theta,prev_wheels_angle)
     print("x: ", x, "y: ", y, "theta: ", theta)
 
     # Particle Filter
-    '''
+
     particles = particle_filtering.motion_update(particles, odometry.calc_odometry(x,y,theta,prev_wheels_angle), noise_std=[0.01, 0.01, 0.005])
     particles = particle_filtering.cal_particle_weight(particles, test_map.og)
     particles = particle_filtering.resample(particles)
@@ -135,7 +222,7 @@ while helper.robot.step(TIME_STEP) != -1:
     #straight, left, right = particle_filtering.lidar_readings()
     #print("Straight: ", straight, "Left: ", left, "Right: ", right)
     #print("x: ", x, ", y: ", y, ", theta: ", theta)
-    '''
+
     print("Working")
     # Main algorithm for robot movement
     if path_index >= len(instructions):
@@ -168,4 +255,10 @@ while helper.robot.step(TIME_STEP) != -1:
         helper.set_wheels_speed(0)
         path_index += 1
         #print("path_index: ", path_index)
+'''
+start, x, y, theta, prev_wheels_angle, current_orientation = robot_move((-3, -12), (-3.25, 5), 'up', -3, -12, 0.0,
+                                                                        np.zeros(8))
+# start, x, y, theta, prev_wheels_angle, current_orientation = robot_move(start, (-3.75, -10), current_orientation, x, y, theta, prev_wheels_angle)
+# start, x, y, theta, prev_wheels_angle, current_orientation = robot_move(start, (-3.75, -3), current_orientation, x, y, theta, prev_wheels_angle)
+
 
