@@ -1,10 +1,12 @@
 """supermarket_manager controller."""
 
-# You may need to import some classes of the controller module. Ex:
-#  from controller import Robot, Motor, DistanceSensor
 from controller import Supervisor
 import random
 import json
+
+# World Size
+WORLD_WIDTH = 20
+WORLD_LENGTH = 30
 
 # Shelf Dimensions
 SHELF_HEIGHT = 2.5
@@ -24,6 +26,10 @@ START_Y = -3
 
 ITEMS_PER_ROW = 5
 ITEMS_PER_SHELF = ITEMS_PER_ROW * SHELF_COUNT
+
+# Adjustable
+FULLNESS = 0.2 # Chance of product being placed
+ROBOT_COUNT = 3 # Number of restockers
 
 PLACEHOLDER_PRODUCT = {
         "name": "CerealBox",
@@ -84,13 +90,16 @@ shelves = {}
 
 supervisor = Supervisor()
 
-TIMESTEP = int(supervisor.getBasicTimeStep())
+TIMESTEP = 16
 
 shelf_group = supervisor.getFromDef("SHELVES")
 shelf_children = shelf_group.getField("children")
 
 product_group = supervisor.getFromDef("PRODUCTS")
 product_children = product_group.getField("children")
+
+robots_group = supervisor.getFromDef("ROBOTS")
+robots_children = robots_group.getField("children")
 
 def calculate_shelf_levels():
     shelf_spacing = (SHELF_HEIGHT - (SHELF_COUNT * SHELF_THICKNESS)) / SHELF_COUNT
@@ -128,7 +137,7 @@ def shelf_placement():
 
         east_facing = False
 
-    print("Shelves placed and products placed")
+    print("Supervisor: Shelves placed and products placed")
 
 def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
@@ -139,11 +148,12 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
         product = (PRODUCTS[shelf_pos])
 
         item_spacing = 0.3
-        fullness = 0.2 # Chance of product being placed
+
 
         product_w = PLACEHOLDER_PRODUCT["w"] # Width of product
 
         shelf_num = 0
+        item_index = 0
 
         if product["name"] not in shelves: # Initialise dict for current shelf
             shelves[product["name"]] = {"product_type" : PRODUCTS[shelf_pos]["type"],
@@ -153,15 +163,13 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
                                         }
 
         for z_level in SHELF_LEVELS:
-            item_index = 0
-            shelf_num %= SHELF_COUNT
-            z_level += 0.1 # Raise product slightly to avoid clipping with shelf when loading
+            z_level = round(z_level + 0.1, 2) # Raise product slightly to avoid clipping with shelf when loading
 
             for i in range(ITEMS_PER_ROW):
 
-                y_offset = (shelf_y - (SHELF_WIDTH / 2) - SHELF_THICKNESS + ((i + 1) * (product_w + item_spacing)))
+                y_offset = round((shelf_y - (SHELF_WIDTH / 2) - SHELF_THICKNESS + ((i + 1) * (product_w + item_spacing))), 2)
 
-                if random.random() > (1 - fullness):  # Likelihood of placing product on shelf
+                if random.random() > (1 - FULLNESS):  # Likelihood of placing product on shelf
                     if east_facing:
                         rotation = "0 0 1 3.14159"
                     else:
@@ -174,58 +182,119 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
                             f' }} ')
 
                     product_children.importMFNodeFromString(-1, prod)
+                    item_index += 1
 
                 else:   # Add empty item slot to dictionary
                     # Dictionary Structure
-                    # Product name : {product_type : "type", empty_positions : [(x,y,z)], shelf_grid : (row, col), shelf_pos : (shelf_x, shelf_y)}
+                    # Product name : {product_type : { empty_positions : [(x,y,z)], shelf_grid : (row, col), shelf_pos : (shelf_x, shelf_y) } }
 
                     product_position = (shelf_x, y_offset, z_level)
                     shelves[product["name"]]["empty_positions"].append(product_position)
 
-                item_index += 1
             shelf_num += 1
+
+def add_robots(robot_count):
+    for i in range(robot_count):
+        robot = (f'DEF PR2_{i+1} Pr2 {{ '
+                 f'translation {-(WORLD_WIDTH/2) + ((i+1)*3)}, -12, 0 '
+                 f'rotation 0 0 1 1.5708 '
+                 f'name "pr2_{i+1}" '
+                 f'controller "marl_controller" '
+                 f'supervisor TRUE '
+                 f' }} '
+                 )
+
+        robots_children.importMFNodeFromString(-1, robot)
+
+def add_product_at_pos(product, position):
+    z_level = 0.1
+
+    empty_pos = shelves[product]["empty_positions"]
+
+    for i in range(len(shelves[product]["empty_positions"])):
+        if empty_pos[0] == position[0] and empty_pos[1] == position[1]:
+            z_level = empty_pos[2]
+            empty_pos.remove(i)
+
+
+
+    prod = (f'{PLACEHOLDER_PRODUCT["name"]} {{ '
+            f'translation {position[0]} {position[1]} {z_level + 0.1} '
+            f'name "{product}" '
+            f' }} ')
+
+    product_children.importMFNodeFromString(-1, prod)
+    print(f"Supervisor: Added product {product} at position: ({position[0]}, {position[1]}, {z_level})")
 
 # Main Loop
 def run():
+
     calculate_shelf_levels()
     shelf_placement()
+    add_robots(ROBOT_COUNT)
 
-    emitter = supervisor.getEmitter("emitter")
-    receiver = supervisor.getReceiver("receiver")
+    # Exporting supermarket data for qlearning
+    output_file = "supermarket_data.json"
+    print(f"Server: Exporting {len(shelves)} products to {output_file}...")
+    with open(output_file, "w") as f:
+        json.dump(shelves, f, indent=4)
+    print("Server: Export complete.")
+
+    emitter = supervisor.getDevice("emitter")
+    receiver = supervisor.getDevice("receiver")
     receiver.enable(TIMESTEP)
 
-    current_inventory = {product["name"]: (ITEMS_PER_SHELF - len(shelves[product["name"]]["empty_positions"])) for
+    # Current inventory structure, { Item Name : Current stock of item }
+    current_inventory = {product["name"] : (ITEMS_PER_SHELF - len(shelves[product["name"]]["empty_positions"])) for
                          product in PRODUCTS.values()}
 
-    while supervisor.step(16) != 1:
+    # Robot positions structure, { robot_name : { position : pos, orientation : o } }
+    robots_positions = {}
+
+    while supervisor.step(TIMESTEP) != -1:
+
+        # Check for messages from robots
         while receiver.getQueueLength() > 0:
-            message = receiver.getData().decode('utf-8')
+            message = receiver.getString()
             data = json.loads(message)
+
+            # Data format, {Type : type, robot_id : id, position : pos, orientation : d}
+            if data["type"] == "UPDATE_POS":
+                robots_positions[data["robot_id"]] = { "position" : data["position"], "orientation" : data["orientation"] }
+
+            # Data format, {Type : type, robot_id : id, item_name : name, item_position : pos }
+            elif data["type"] == "RESTOCKING":
+                product = data["item_name"]
+                product_position = data["item_pos"]
+                current_inventory[product] += 1
+
+                add_product_at_pos(product, product_position)
+                print(f"Server: Received inventory for {product} at position {data['item_pos']}")
+
             receiver.nextPacket()
 
-            if data["type"] == "RESTOCK":
-                item = data["item"]
-                current_inventory[item] += 1
-                print(f"Robot restocked item {item}. New stock count {current_inventory[item]}")
+        # Calculate rewards
+        total_possible_stock = len(PRODUCTS) * ITEMS_PER_SHELF
+        current_total_stock = sum(current_inventory.values())
 
-        total_stock = sum(current_inventory.values())
-        global_reward = total_stock
+        out_of_stock_penalty = 0
+        for item, count in current_inventory.items():
+            if count == 0:
+                out_of_stock_penalty += 50
+            elif count <= 5:
+                out_of_stock_penalty += 10
 
-        state_msg = {
-            "inventory" : current_inventory,
+        filled_percentage = (current_total_stock / total_possible_stock) * 100
+
+        global_reward = filled_percentage - out_of_stock_penalty
+
+        # Send messages to robots
+        global_broadcast = {
+            "type" : "GLOBAL",
             "reward" : global_reward,
+            "robots_positions" : robots_positions,
+            "inventory" : current_inventory,
         }
-        emitter.send(json.dumps(state_msg)).encode("utf-8")
-
-output_file = "supermarket_data.json"
-print(f"Exporting {len(empty_slots)} products to {output_file}...")
-with open(output_file, "w") as f:
-    json.dump(empty_slots, f, indent=4)
-
-print("Export complete.")
+        emitter.send(json.dumps(global_broadcast))
 
 run()
-
-# Checking number of empty slots
-# for x, y in empty_slots.items():
-#     print(f"Shelf: {x}, Product Type: {y["product_type"]}, Empty Slots: {len(y["empty_positions"])}, Shelf Grid Pos: {y["shelf_pos"]}")

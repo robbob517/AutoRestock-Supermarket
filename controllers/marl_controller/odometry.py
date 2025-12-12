@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-import helper
+import pr2_controller as pr2
 
 # PR2 constants
 WHEELS_DISTANCE = 0.4492
@@ -16,7 +16,7 @@ theta = 0.0
 prev_wheels_angle = np.zeros(8)
 
 def calc_odometry(x, y, theta, prev_wheels_angle):
-    current_wheels_angle = np.array([helper.wheel_sensors[i].getValue() for i in range(8)])
+    current_wheels_angle = np.array([pr2.wheel_sensors[i].getValue() for i in range(8)])
     delta_wheels_angle = current_wheels_angle - prev_wheels_angle
     prev_wheels_angle[:] = current_wheels_angle
 
@@ -32,7 +32,7 @@ def calc_odometry(x, y, theta, prev_wheels_angle):
     delta_trans = (avg_distance_left + avg_distance_right) / 2
 
     # Using IMU for rotation
-    imu_roll, imu_pitch, imu_yaw = helper.imu_sensor.getRollPitchYaw()
+    imu_roll, imu_pitch, imu_yaw = pr2.imu_sensor.getRollPitchYaw()
 
     # Change in rotation
     delta_rot = (imu_yaw - theta + math.pi) % (2 * math.pi) - math.pi
