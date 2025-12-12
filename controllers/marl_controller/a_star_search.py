@@ -101,8 +101,6 @@ def a_star_path(start, goal):
                     g_cost[neighbor] = neighbor_g_cost
                     neighbor_f_cost = calc_f_cost(neighbor, goal, neighbor_g_cost)
                     heapq.heappush(open_set, (neighbor_f_cost, neighbor))
-
-    print("No path found!")
     return None
 
 # Function to calculate turning angle for robot to follow the path

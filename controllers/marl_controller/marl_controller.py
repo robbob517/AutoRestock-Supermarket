@@ -7,6 +7,7 @@ import pr2_controller as pr2
 import pr2_qlearn_agent as qlearn
 import odometry as od
 import a_star_search as pathfind
+import supermarket_map as map
 
 TIMESTEP = 16
 COOP_WEIGHTING = 0.7
@@ -50,6 +51,10 @@ def in_corridor(current_pos, target_pos, other_pos, corridor_width=0.8):
 
     return in_x_bounds and in_y_bounds
 
+def temp_map_update(obstacles, occupied=True):
+    for ox, oy in obstacles:
+        map.update_object(ox, oy, 0.6, 0.6, 0.6, occupied)
+
 def run():
     robot = pr2.robot
     robot_name = robot.getName()
@@ -91,6 +96,8 @@ def run():
     print(f"{robot_name}: Initialised at position {current_x}, {current_y}")
 
     step = 0
+    patience = 0
+    other_obstacles = []
 
     while robot.step(TIMESTEP) != -1:
 
@@ -221,7 +228,10 @@ def run():
 
             # Avoidance
             path_blocked = False
-            critical_distance = 0.6
+            critical_distance = 0.7
+            max_patience = 256
+            repathing = False
+
             for other_robot_id, other_data in other_robots.items():
                 if other_robot_id == robot_name:
                     continue
@@ -232,6 +242,7 @@ def run():
                 # Creates corridor of area to check
                 if in_corridor((current_x, current_y), (virtual_target_x, virtual_target_y), other_data["position"]):
                     path_blocked = True
+                    other_obstacles.append(other_data["position"])
                     break
 
                 # Imminent Crash
@@ -240,8 +251,30 @@ def run():
                     break
 
             if path_blocked:
+                patience += 1
                 pr2.set_wheels_speed(0)
-                continue
+
+                if patience > max_patience:
+                    repathing = True
+                    print(f"{robot_name}: Patience limit reached, re-pathing")
+                else:
+                    continue
+
+            if repathing:
+                temp_map_update(other_obstacles, True)
+                path = pathfind.a_star_path((current_x, current_y), target_coords)
+                temp_map_update(other_obstacles, False)
+
+                if path:
+                    print(f"{robot_name}: Re-pathing Success")
+                    instructions = pathfind.move_instructions(path)
+                    path_index = 0
+                else:
+                    print(f"{robot_name}: Re-pathing Failed")
+                    robot_state = STATE_IDLE
+
+            patience = 0
+            other_obstacles = []
 
             angle_to_turn = pathfind.get_rotation(current_orientation, target_dir)
             if abs(angle_to_turn) > 1e-3:

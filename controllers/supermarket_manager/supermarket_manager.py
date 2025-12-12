@@ -27,6 +27,10 @@ START_Y = -3
 ITEMS_PER_ROW = 5
 ITEMS_PER_SHELF = ITEMS_PER_ROW * SHELF_COUNT
 
+# Adjustable
+FULLNESS = 0.2 # Chance of product being placed
+ROBOT_COUNT = 3 # Number of restockers
+
 PLACEHOLDER_PRODUCT = {
         "name": "CerealBox",
         "w": 0.08,
@@ -144,7 +148,7 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
         product = (PRODUCTS[shelf_pos])
 
         item_spacing = 0.3
-        fullness = 0.2 # Chance of product being placed
+
 
         product_w = PLACEHOLDER_PRODUCT["w"] # Width of product
 
@@ -165,7 +169,7 @@ def product_placement(shelf_x, shelf_y, shelf_row, shelf_col, east_facing):
 
                 y_offset = round((shelf_y - (SHELF_WIDTH / 2) - SHELF_THICKNESS + ((i + 1) * (product_w + item_spacing))), 2)
 
-                if random.random() > (1 - fullness):  # Likelihood of placing product on shelf
+                if random.random() > (1 - FULLNESS):  # Likelihood of placing product on shelf
                     if east_facing:
                         rotation = "0 0 1 3.14159"
                     else:
@@ -224,11 +228,10 @@ def add_product_at_pos(product, position):
 
 # Main Loop
 def run():
-    robot_count = 2
 
     calculate_shelf_levels()
     shelf_placement()
-    add_robots(robot_count)
+    add_robots(ROBOT_COUNT)
 
     # Exporting supermarket data for qlearning
     output_file = "supermarket_data.json"
@@ -247,8 +250,6 @@ def run():
 
     # Robot positions structure, { robot_name : { position : pos, orientation : o } }
     robots_positions = {}
-
-    global_reward = 0
 
     while supervisor.step(TIMESTEP) != -1:
 
@@ -273,7 +274,19 @@ def run():
             receiver.nextPacket()
 
         # Calculate rewards
-        global_reward = sum(current_inventory.values())
+        total_possible_stock = len(PRODUCTS) * ITEMS_PER_SHELF
+        current_total_stock = sum(current_inventory.values())
+
+        out_of_stock_penalty = 0
+        for item, count in current_inventory.items():
+            if count == 0:
+                out_of_stock_penalty += 50
+            elif count <= 5:
+                out_of_stock_penalty += 10
+
+        filled_percentage = (current_total_stock / total_possible_stock) * 100
+
+        global_reward = filled_percentage - out_of_stock_penalty
 
         # Send messages to robots
         global_broadcast = {
