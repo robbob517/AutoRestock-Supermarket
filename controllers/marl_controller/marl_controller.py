@@ -96,8 +96,12 @@ def run():
     print(f"{robot_name}: Initialised at position {current_x}, {current_y}")
 
     step = 0
+
+    # Collision Avoidance
     patience = 0
     other_obstacles = []
+    re_pathing = False
+    priority = False
 
     while robot.step(TIMESTEP) != -1:
 
@@ -215,10 +219,10 @@ def run():
             look_ahead = 1.5
 
             dx, dy = 0, 0
-            if current_orientation == 'up': dy = 1
-            elif current_orientation == 'down': dy = -1
-            elif current_orientation == 'left': dx = -1
-            elif current_orientation == 'right': dx = 1
+            if target_dir == 'up': dy = 1
+            elif target_dir == 'down': dy = -1
+            elif target_dir == 'left': dx = -1
+            elif target_dir == 'right': dx = 1
 
             target_distance = np.sqrt((target_x - current_x) ** 2 + (target_y - current_y) ** 2)
             check_dist = min(look_ahead, target_distance)
@@ -230,7 +234,6 @@ def run():
             path_blocked = False
             critical_distance = 0.7
             max_patience = 256
-            repathing = False
 
             for other_robot_id, other_data in other_robots.items():
                 if other_robot_id == robot_name:
@@ -243,6 +246,10 @@ def run():
                 if in_corridor((current_x, current_y), (virtual_target_x, virtual_target_y), other_data["position"]):
                     path_blocked = True
                     other_obstacles.append(other_data["position"])
+                    if robot_name > other_robot_id:
+                        priority = True
+                    else:
+                        priority = False
                     break
 
                 # Imminent Crash
@@ -255,23 +262,26 @@ def run():
                 pr2.set_wheels_speed(0)
 
                 if patience > max_patience:
-                    repathing = True
-                    print(f"{robot_name}: Patience limit reached, re-pathing")
+                    if priority:
+                        print(f"{robot_name}: Patience limit reached, re-pathing")
+                        temp_map_update(other_obstacles, True)
+                        path = pathfind.a_star_path((current_x, current_y), target_coords)
+                        temp_map_update(other_obstacles, False)
+
+                        if path:
+                            print(f"{robot_name}: Re-pathing Success")
+                            instructions = pathfind.move_instructions(path)
+                            path_index = 0
+                            patience = 0
+                        else:
+                            print(f"{robot_name}: Re-pathing Failed")
+                            patience = 0
+                            continue
+                    else:
+                        patience = 0
+                        continue
                 else:
                     continue
-
-            if repathing:
-                temp_map_update(other_obstacles, True)
-                path = pathfind.a_star_path((current_x, current_y), target_coords)
-                temp_map_update(other_obstacles, False)
-
-                if path:
-                    print(f"{robot_name}: Re-pathing Success")
-                    instructions = pathfind.move_instructions(path)
-                    path_index = 0
-                else:
-                    print(f"{robot_name}: Re-pathing Failed")
-                    robot_state = STATE_IDLE
 
             patience = 0
             other_obstacles = []
