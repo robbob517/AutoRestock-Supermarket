@@ -114,9 +114,20 @@ def run():
             current_x, current_y, current_theta, prev_wheels_angle)
 
         # Ground Truth for position
-        # ground_position = robot_node.getPosition()
+        ground_position = robot_node.getPosition()
         # current_x = ground_position[0]
         # current_y = ground_position[1]
+
+        real_x = ground_position[0]
+        real_y = ground_position[1]
+
+        drift_x = abs(real_x - current_x)
+        drift_y = abs(real_y - current_y)
+        total_drift = np.sqrt(drift_x ** 2 + drift_y ** 2)
+
+        step += 1
+        if (step % (TIMESTEP * 50)) == 0:
+            print(f"{robot_name}: Total Drift: {total_drift:.2f} metres")
 
         # Listen for server messages
         data = None
