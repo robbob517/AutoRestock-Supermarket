@@ -28,8 +28,8 @@ ITEMS_PER_ROW = 5
 ITEMS_PER_SHELF = ITEMS_PER_ROW * SHELF_COUNT
 
 # Adjustable
-FULLNESS = 0.2 # Chance of product being placed
-ROBOT_COUNT = 3 # Number of restockers
+FULLNESS = 0.3 # Chance of product being placed
+ROBOT_COUNT = 4 # Number of restockers
 
 PLACEHOLDER_PRODUCT = {
         "name": "CerealBox",

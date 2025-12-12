@@ -18,6 +18,8 @@ STATE_MOVING = 2
 STATE_REFILLING = 3
 STATE_RESTOCKING = 4
 
+ROBOT_MAX_STOCK = 2
+
 def rotation_snap(robot_node):
     rotation_field = robot_node.getField("rotation")
     current_rotation = rotation_field.getSFRotation()
@@ -96,8 +98,12 @@ def run():
     print(f"{robot_name}: Initialised at position {current_x}, {current_y}")
 
     step = 0
+
+    # Collision Avoidance
     patience = 0
     other_obstacles = []
+    re_pathing = False
+    priority = False
 
     while robot.step(TIMESTEP) != -1:
 
@@ -106,13 +112,24 @@ def run():
         #     print(f"{robot_name}: Estimated position: {current_x}, {current_y}")
 
         # Odometry
-        # delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = od.calc_odometry(
-        #     current_x, current_y, current_theta, prev_wheels_angle)
+        delta_trans, delta_rot, current_x, current_y, current_theta, prev_wheels_angle = od.calc_odometry(
+            current_x, current_y, current_theta, prev_wheels_angle)
 
         # Ground Truth for position
         ground_position = robot_node.getPosition()
-        current_x = ground_position[0]
-        current_y = ground_position[1]
+        # current_x = ground_position[0]
+        # current_y = ground_position[1]
+
+        real_x = ground_position[0]
+        real_y = ground_position[1]
+
+        drift_x = abs(real_x - current_x)
+        drift_y = abs(real_y - current_y)
+        total_drift = np.sqrt(drift_x ** 2 + drift_y ** 2)
+
+        step += 1
+        if (step % (TIMESTEP * 50)) == 0:
+            print(f"{robot_name}: Total Drift: {total_drift:.2f} metres")
 
         # Listen for server messages
         data = None
@@ -228,9 +245,8 @@ def run():
 
             # Avoidance
             path_blocked = False
-            critical_distance = 0.7
+            critical_distance = 1.2
             max_patience = 256
-            repathing = False
 
             for other_robot_id, other_data in other_robots.items():
                 if other_robot_id == robot_name:
@@ -243,11 +259,19 @@ def run():
                 if in_corridor((current_x, current_y), (virtual_target_x, virtual_target_y), other_data["position"]):
                     path_blocked = True
                     other_obstacles.append(other_data["position"])
+                    if robot_name > other_robot_id:
+                        priority = True
+                    else:
+                        priority = False
                     break
 
                 # Imminent Crash
                 if distance < critical_distance:
                     path_blocked = True
+                    if robot_name > other_robot_id:
+                        priority = True
+                    else:
+                        priority = False
                     break
 
             if path_blocked:
@@ -255,23 +279,27 @@ def run():
                 pr2.set_wheels_speed(0)
 
                 if patience > max_patience:
-                    repathing = True
-                    print(f"{robot_name}: Patience limit reached, re-pathing")
+                    if priority:
+                        print(f"{robot_name}: Patience limit reached, re-pathing")
+
+                        temp_map_update(other_obstacles, True)
+                        path = pathfind.a_star_path((current_x, current_y), target_coords)
+                        temp_map_update(other_obstacles, False)
+
+                        if path:
+                            print(f"{robot_name}: Re-pathing Success")
+                            instructions = pathfind.move_instructions(path)
+                            path_index = 0
+                            target_dir, target_x, target_y = instructions[path_index]
+                        else:
+                            print(f"{robot_name}: Re-pathing Failed")
+                            patience = 0
+                            continue
+                    else:
+                        patience = 0
+                        continue
                 else:
                     continue
-
-            if repathing:
-                temp_map_update(other_obstacles, True)
-                path = pathfind.a_star_path((current_x, current_y), target_coords)
-                temp_map_update(other_obstacles, False)
-
-                if path:
-                    print(f"{robot_name}: Re-pathing Success")
-                    instructions = pathfind.move_instructions(path)
-                    path_index = 0
-                else:
-                    print(f"{robot_name}: Re-pathing Failed")
-                    robot_state = STATE_IDLE
 
             patience = 0
             other_obstacles = []
@@ -300,7 +328,7 @@ def run():
         # Return to storage area to refill robot's inventory
         elif robot_state == STATE_REFILLING:
             previous_stock = robot_stock
-            robot_stock = 2
+            robot_stock = ROBOT_MAX_STOCK
 
             print(f"{robot_name}: Stock refilled from {previous_stock} to {robot_stock}")
 
