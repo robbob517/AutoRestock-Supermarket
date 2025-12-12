@@ -219,10 +219,10 @@ def run():
             look_ahead = 1.5
 
             dx, dy = 0, 0
-            if target_dir == 'up': dy = 1
-            elif target_dir == 'down': dy = -1
-            elif target_dir == 'left': dx = -1
-            elif target_dir == 'right': dx = 1
+            if current_orientation == 'up': dy = 1
+            elif current_orientation == 'down': dy = -1
+            elif current_orientation == 'left': dx = -1
+            elif current_orientation == 'right': dx = 1
 
             target_distance = np.sqrt((target_x - current_x) ** 2 + (target_y - current_y) ** 2)
             check_dist = min(look_ahead, target_distance)
