@@ -15,7 +15,7 @@ import test_map
 # ----------------------
 # Simulation / robot params
 # ----------------------
-TIME_STEP = 32
+TIME_STEP = 16
 
 # Particle Filtering
 num_particles = 200
@@ -186,6 +186,16 @@ while helper.robot.step(TIME_STEP) != -1:
         # Obtain move instructions for the robot  according to path
         instructions = a_star_search.move_instructions(world_path)
         #print(instructions)
+        '''
+        lidar = helper.base_laser.getRangeImage()
+        if lidar[len(lidar) // 2] <= 0.3:
+            helper.set_wheels_speed(0)
+
+            delta_trans, delta_rot, x, y, theta, prev_wheels_angle = odometry.calc_odometry(x, y, theta,
+                                                                                            prev_wheels_angle)
+            start = [x, y]
+        '''
+
 
         lidar = helper.base_laser.getRangeImage()
         if lidar[len(lidar) // 2] <= 0.3:
