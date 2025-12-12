@@ -18,6 +18,8 @@ STATE_MOVING = 2
 STATE_REFILLING = 3
 STATE_RESTOCKING = 4
 
+ROBOT_MAX_STOCK = 2
+
 def rotation_snap(robot_node):
     rotation_field = robot_node.getField("rotation")
     current_rotation = rotation_field.getSFRotation()
@@ -53,7 +55,7 @@ def in_corridor(current_pos, target_pos, other_pos, corridor_width=0.8):
 
 def temp_map_update(obstacles, occupied=True):
     for ox, oy in obstacles:
-        map.update_object(ox, oy, 0.6, 0.6, 0.8, occupied)
+        map.update_object(ox, oy, 0.6, 0.6, 0.6, occupied)
 
 def run():
     robot = pr2.robot
@@ -243,7 +245,7 @@ def run():
 
             # Avoidance
             path_blocked = False
-            critical_distance = 0.7
+            critical_distance = 1.2
             max_patience = 256
 
             for other_robot_id, other_data in other_robots.items():
@@ -266,6 +268,10 @@ def run():
                 # Imminent Crash
                 if distance < critical_distance:
                     path_blocked = True
+                    if robot_name > other_robot_id:
+                        priority = True
+                    else:
+                        priority = False
                     break
 
             if path_blocked:
@@ -275,6 +281,7 @@ def run():
                 if patience > max_patience:
                     if priority:
                         print(f"{robot_name}: Patience limit reached, re-pathing")
+
                         temp_map_update(other_obstacles, True)
                         path = pathfind.a_star_path((current_x, current_y), target_coords)
                         temp_map_update(other_obstacles, False)
@@ -283,7 +290,7 @@ def run():
                             print(f"{robot_name}: Re-pathing Success")
                             instructions = pathfind.move_instructions(path)
                             path_index = 0
-                            patience = 0
+                            target_dir, target_x, target_y = instructions[path_index]
                         else:
                             print(f"{robot_name}: Re-pathing Failed")
                             patience = 0
@@ -321,7 +328,7 @@ def run():
         # Return to storage area to refill robot's inventory
         elif robot_state == STATE_REFILLING:
             previous_stock = robot_stock
-            robot_stock = 5
+            robot_stock = ROBOT_MAX_STOCK
 
             print(f"{robot_name}: Stock refilled from {previous_stock} to {robot_stock}")
 
